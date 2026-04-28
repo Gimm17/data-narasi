@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/laravel/compare/v12.12.2...12.x)
+## [2026-04-28] - DataNarasi AI Integration & Fixes
+
+### Added
+- Integrated **NVIDIA NIM** AI provider (`meta/llama-3.1-8b-instruct`).
+- Integrated **MiniMax** AI provider (`MiniMax-M2.5`) with automatic `<think>` tag stripping.
+- Registered both new providers into the `AIProviderManager` fallback chain.
+- Added `MINIMAX_API_KEY` to environment variables (`.env`, `.env.example`, `python-service/.env`).
+- Seeded NVIDIA and MiniMax providers into the `ai_providers` database table via `AIProviderSeeder`.
+
+### Changed
+- Refactored `AIProviderManager` to dynamically load the fallback order (`AI_PROVIDER_ORDER`) from the `.env` file instead of using a hardcoded list.
+- Updated `PROMPT.md` and `.cursorrules` to reflect the new 6-provider fallback chain: Gemini → Kimi → GLM → NVIDIA NIM → MiniMax → Claude.
+- Improved the project's `README.md` with a comprehensive guide, badges, architecture diagrams, and AI provider tables.
+- Updated `.gitignore` to exclude `python-service/.env`, `__pycache__` directories, and `pip_out.log`.
+
+### Fixed
+- Fixed a timeout issue between Laravel and the Python FastAPI service. Moved the heavy data processing pipeline (cleansing, analysis, chart generation, and AI narrative generation) into FastAPI `BackgroundTasks`. The `/process` endpoint now immediately returns `202 Accepted` to prevent Laravel's 10-second `cURL` timeout.
+- Handled a `500 Internal Server Error` during the Laravel callback by making `ai_provider_id` nullable in the `AIUsageLog::create` method, ensuring missing database providers don't crash the callback handler.
+- Resolved `php artisan pail` extension warning (normal on Windows) and verified successful background processing via Laravel logs.## [Unreleased](https://github.com/laravel/laravel/compare/v12.12.2...12.x)
 
 ## [v12.12.2](https://github.com/laravel/laravel/compare/v12.12.1...v12.12.2) - 2026-03-14
 
