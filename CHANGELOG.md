@@ -1,5 +1,47 @@
 # Release Notes
 
+## [2026-04-28 v3] - Expanded Upload Options & Dynamic Provider Order
+
+### 📋 Upload Options Expansion
+
+- **Analysis Types (6 → 11):** Added 5 new domain-specific analysis types:
+  - 👥 **SDM / HR** — Kinerja karyawan, turnover, absensi, demografi SDM
+  - 🎓 **Akademik** — Nilai, distribusi grade, kelulusan, tren per mata pelajaran
+  - 🏥 **Kesehatan** — Data pasien, prevalensi penyakit, indikator klinis
+  - 🚚 **Logistik** — Efisiensi pengiriman, lead time, biaya transportasi
+  - 📋 **Survey / Polling** — Distribusi jawaban, sentimen, korelasi variabel
+- **Narrative Tones (3 → 6):** Added 3 new writing styles:
+  - 📌 **Eksekutif** — Ringkasan KPI 1 menit, bullet points, rekomendasi strategis
+  - 📖 **Storytelling** — Data diceritakan seperti narasi yang mengalir
+  - 🎓 **Akademis** — Gaya ilmiah untuk skripsi, jurnal, dan laporan penelitian
+- Each option now displays **icon + label + description** in a visual card grid.
+- Python `prompt_builder.py` updated with domain-specific metrics and business questions for all 11 types and tone instructions for all 6 tones.
+
+### 🔧 Dynamic Provider Order Fix
+
+- **Admin panel priority now actually controls AI fallback order.** Previously, admin panel updated DB but Python read from `.env` (disconnect).
+- Laravel now sends `provider_order` (from `ai_providers` table sorted by `priority ASC`) in every `/process` request.
+- Python `AIProviderManager.generate()` accepts dynamic `provider_order` override.
+- Uses `api_key_env` → slug mapping for reliable provider identification.
+
+### UI Improvements
+
+- Upload page redesigned: tone selector changed from dropdown to visual card grid (same style as analysis types).
+- Submit button now shows animated spinner during upload.
+- Reset button properly resets both visual state and form data.
+
+### Modified Files
+- `app/Enums/AnalysisType.php` — 5 new enum cases + icon/description
+- `app/Enums/NarrativeTone.php` — 3 new enum cases + icon/description
+- `app/Http/Controllers/UploadController.php` — Pass icon + description to frontend
+- `app/Services/PythonServiceClient.php` — Send DB provider order in /process payload
+- `python-service/prompt_builder.py` — New analysis focus entries + tone instructions
+- `python-service/ai_provider.py` — Dynamic provider_order param in generate()
+- `python-service/main.py` — provider_order field in ProcessRequest
+- `resources/js/Pages/Upload.vue` — Card-based UI for all options
+
+---
+
 ## [2026-04-28 v2] - Security, UI Overhaul & Admin Panel Enhancement
 
 ### 🔒 Security Improvements
