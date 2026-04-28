@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/ai-providers', [AIProviderController::class, 'index'])->name('ai-providers.index');
     Route::patch('/ai-providers/{provider}/toggle', [AIProviderController::class, 'toggle'])->name('ai-providers.toggle');
+    Route::put('/ai-providers/{provider}', [AIProviderController::class, 'updateProvider'])->name('ai-providers.update');
     Route::post('/ai-providers/priority', [AIProviderController::class, 'updatePriority'])->name('ai-providers.priority');
     Route::post('/ai-providers/{provider}/reset-counters', [AIProviderController::class, 'resetCounters'])->name('ai-providers.reset');
 });

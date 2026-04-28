@@ -30,6 +30,9 @@ class AIProvider extends Model
         'is_enabled',
         'max_tokens',
         'timeout_seconds',
+        'total_calls',
+        'total_errors',
+        'last_used_at',
     ];
 
     /**
@@ -40,6 +43,7 @@ class AIProvider extends Model
         'priority' => 'integer',
         'max_tokens' => 'integer',
         'timeout_seconds' => 'integer',
+        'last_used_at' => 'datetime',
     ];
 
     /**

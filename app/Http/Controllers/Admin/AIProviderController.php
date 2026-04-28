@@ -141,4 +141,76 @@ class AIProviderController extends Controller
             'message' => "Counter {$provider->name} berhasil direset.",
         ]);
     }
+
+    /**
+     * Update provider settings (API key env, model, timeout, tokens)
+     * API key disimpan sebagai env var name di DB, nilai sebenarnya tetap di .env
+     * Untuk keamanan, kita juga bisa update langsung nilai di .env file
+     */
+    public function updateProvider(Request $request, AIProvider $provider)
+    {
+        $validated = $request->validate([
+            'api_key_env' => 'sometimes|string|max:100',
+            'api_key_value' => 'nullable|string|max:500',
+            'model_id' => 'sometimes|string|max:200',
+            'max_tokens' => 'sometimes|integer|min:100|max:32000',
+            'timeout_seconds' => 'sometimes|integer|min:5|max:300',
+            'priority' => 'sometimes|integer|min:1|max:20',
+        ]);
+
+        // Update model fields (bukan API key value)
+        $updateData = collect($validated)
+            ->except('api_key_value')
+            ->filter(fn ($v) => $v !== null)
+            ->toArray();
+
+        if (!empty($updateData)) {
+            $provider->update($updateData);
+        }
+
+        // Update API key value di .env file jika diberikan
+        if (!empty($validated['api_key_value'])) {
+            $envKey = $validated['api_key_env'] ?? $provider->api_key_env;
+            $this->updateEnvValue($envKey, $validated['api_key_value']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Provider {$provider->name} berhasil diperbarui.",
+        ]);
+    }
+
+    /**
+     * Update nilai di .env file
+     * Hanya bisa diakses admin — aman karena dilindungi middleware
+     */
+    private function updateEnvValue(string $key, string $value): void
+    {
+        $envPath = base_path('.env');
+
+        if (!file_exists($envPath)) {
+            return;
+        }
+
+        $envContent = file_get_contents($envPath);
+
+        // Escape value jika mengandung spasi atau karakter khusus
+        $escapedValue = str_contains($value, ' ') ? "\"{$value}\"" : $value;
+
+        // Check if key exists
+        if (preg_match("/^{$key}=.*/m", $envContent)) {
+            // Replace existing
+            $envContent = preg_replace(
+                "/^{$key}=.*/m",
+                "{$key}={$escapedValue}",
+                $envContent
+            );
+        } else {
+            // Append new key
+            $envContent .= "\n{$key}={$escapedValue}";
+        }
+
+        file_put_contents($envPath, $envContent);
+    }
 }
+
