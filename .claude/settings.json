@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -r \"c:/Users/HP/Laravel/data-narasi/docs\" \"c:/tmp/data-narasi-backup/\")",
+      "Bash(cp -r \"c:/Users/HP/Laravel/data-narasi/python-service\" \"c:/tmp/data-narasi-backup/\")",
+      "Bash(composer create-project:*)",
+      "Bash(find . -maxdepth 1 ! -name '.' ! -name '..' ! -name '.claude' ! -name '.cursor' -exec rm -rf {} +)",
+      "Bash(cp -r \"c:/tmp/data-narasi-backup/docs\" \"c:/Users/HP/Laravel/data-narasi/\")",
+      "Bash(cp -r \"c:/tmp/data-narasi-backup/python-service\" \"c:/Users/HP/Laravel/data-narasi/\")",
+      "Bash(mysql --version)",
+      "Bash(redis-cli --version)",
+      "Bash(sc query:*)",
+      "Bash(mysql -u root -e \"CREATE DATABASE IF NOT EXISTS data_narasi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\")",
+      "Read(//c/xampp/**)",
+      "Read(//c//**)",
+      "Read(//c/Program Files/**)",
+      "Bash(\"/c/xampp/mysql/bin/mysql.exe\" -u root -e \"CREATE DATABASE IF NOT EXISTS data_narasi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\")",
+      "Bash(php artisan:*)",
+      "Bash(npm install:*)",
+      "Bash(composer require:*)",
+      "Bash(npm run:*)",
+      "Bash(timeout 5 bash -c \"cd ''c:/Users/HP/Laravel/data-narasi'' && php artisan serve --host=127.0.0.1 --port=8000\")",
+      "Bash(php -r \"require ''vendor/autoload.php''; $app = require_once ''bootstrap/app.php''; $app->make\\(''Illuminate\\\\Contracts\\\\Console\\\\Kernel''\\)->bootstrap\\(\\); $providers = \\\\App\\\\Models\\\\AIProvider::all\\(\\); echo ''Total Providers: '' . $providers->count\\(\\) . PHP_EOL; foreach\\($providers as $p\\) { echo ''- '' . $p->name . '' \\('' . $p->model_id . ''\\) - Priority: '' . $p->priority . PHP_EOL; }\")",
+      "Bash(php verify_providers.php)"
+    ],
+    "additionalDirectories": [
+      "c:\\tmp"
+    ]
+  }
+}

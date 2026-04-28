@@ -1,0 +1,74 @@
+# .cursorrules — DataNarasi Project
+# Dibaca otomatis oleh Cursor IDE untuk semua file di project ini
+
+You are an expert full-stack developer working on DataNarasi, an AI-powered
+data analysis web application. Always read PROMPT.md first for full context.
+
+## Project Context
+- Laravel 12 backend + Python FastAPI microservice
+- Vue 3 (Composition API only) + Inertia.js frontend
+- Multi-AI narrative generation: Gemini → Kimi → GLM → NVIDIA NIM → MiniMax → Claude (fallback chain)
+- Target users: Indonesian SMBs and data analysts
+- All AI output must be in Bahasa Indonesia
+
+## Code Style Rules
+
+### PHP / Laravel
+- PHP 8.2+ syntax always (readonly, enums, match, named args, fibers if needed)
+- PSR-12 formatting
+- Docblocks on every class and public method
+- Return types mandatory on all functions
+- Use Laravel helpers: collect(), now(), str(), filled(), blank()
+- Repositories are NOT used — use Eloquent directly in Services
+- Services are plain PHP classes in app/Services/, injected via constructor
+- No facades inside Service classes — use dependency injection
+- Exception handling: use Laravel's Handler, not try-catch in controllers
+
+### Vue 3
+- <script setup lang="ts"> always — TypeScript preferred but not mandatory
+- defineProps() and defineEmits() always typed
+- No direct DOM manipulation — use template refs only
+- Composables go in resources/js/composables/
+- No inline styles — Tailwind classes only
+- Component names: PascalCase files, kebab-case in templates
+- Emit events in kebab-case: emit('update-status')
+
+### Python
+- Type hints on every function parameter and return value
+- Docstrings in every class and function (Indonesian description ok)
+- Pandas: always handle FileNotFoundError, EmptyDataError, ParserError
+- FastAPI: Pydantic models for all request/response bodies
+- No global mutable state — pass config via function arguments
+
+### SQL / Migrations
+- Always use bigIncrements() for PKs
+- Always add timestamps() to every table
+- Foreign keys use constrained() with cascadeOnDelete() where appropriate
+- Index columns used in WHERE clauses
+
+## File Naming Conventions
+- Laravel Controllers: PascalCase + Controller suffix (UploadController.php)
+- Laravel Models: PascalCase singular (Report.php, not Reports.php)
+- Laravel Jobs: PascalCase + Job suffix (ProcessDataJob.php)
+- Vue Components: PascalCase (UploadZone.vue)
+- Vue Pages: PascalCase in folder matching route (Pages/Report/Show.vue)
+- Python modules: snake_case (ai_provider.py, prompt_builder.py)
+
+## API Design
+- All API routes under /api/v1/
+- JSON responses always: { "success": bool, "data": any, "message": string }
+- HTTP status codes used correctly (200, 201, 422, 500)
+- Report webhook from Python to Laravel: POST /api/v1/reports/{id}/callback
+
+## Security Rules
+- Validate all file uploads: mime type, size, extension whitelist
+- Never expose AI API keys in responses or logs
+- Sanitize all user inputs before passing to Python service
+- Use Laravel's storage disk abstraction — never direct file paths in DB
+
+## When Writing Code
+1. Show the full file path as a comment on the first line
+2. Write concise Indonesian comments for logic blocks
+3. After any migration, show the php artisan migrate command
+4. After any new route, show it in route:list format
+5. For Python files, always include the pip install command for new packages

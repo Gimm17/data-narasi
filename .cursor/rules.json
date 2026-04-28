@@ -1,0 +1,38 @@
+{
+  "rules": [
+    {
+      "name": "Laravel PHP Files",
+      "pattern": "**/*.php",
+      "instructions": "Gunakan PHP 8.2+, Laravel 12 conventions, PSR-12. Selalu tulis docblock. Return type wajib. Komentar dalam Bahasa Indonesia. Lihat .cursorrules untuk panduan lengkap."
+    },
+    {
+      "name": "Vue Components",
+      "pattern": "resources/js/**/*.vue",
+      "instructions": "Wajib <script setup> Composition API. TypeScript preferred. Tailwind only, no inline styles. Lihat .cursorrules untuk panduan lengkap."
+    },
+    {
+      "name": "Python Service",
+      "pattern": "python-service/**/*.py",
+      "instructions": "Python 3.11+, FastAPI, type hints wajib, docstrings wajib. Semua AI provider inherit dari BaseAIProvider. Handle semua Pandas exceptions."
+    },
+    {
+      "name": "Migration Files",
+      "pattern": "database/migrations/**/*.php",
+      "instructions": "Selalu gunakan bigIncrements() untuk PK. Tambahkan timestamps(). Index kolom yang sering diquery. Foreign key gunakan constrained()."
+    },
+    {
+      "name": "Environment Files",
+      "pattern": ".env*",
+      "instructions": "Jangan tulis API key asli di .env.example — gunakan placeholder kosong atau deskripsi. Contoh: GEMINI_API_KEY=your-gemini-api-key-here"
+    }
+  ],
+  "mcpServers": {},
+  "ignore": [
+    "vendor/**",
+    "node_modules/**",
+    "storage/**",
+    ".git/**",
+    "python-service/__pycache__/**",
+    "python-service/.venv/**"
+  ]
+}
