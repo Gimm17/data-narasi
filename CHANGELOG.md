@@ -1,5 +1,74 @@
 # Release Notes
 
+## [2026-04-28 v2] - Security, UI Overhaul & Admin Panel Enhancement
+
+### 🔒 Security Improvements
+
+- **Config Cache Safety:** Migrated all `env()` calls in `PythonServiceClient` to `config()` via new `config/python-service.php`. Prevents `null` values after `php artisan config:cache` in production.
+- **HMAC Callback Signing:** Added HMAC-SHA256 signature generation and validation for Python→Laravel callbacks. Both sides now sign/verify request payloads using shared secret, preventing tampered or spoofed callbacks. Backward-compatible with simple token validation as fallback.
+- **CORS Restriction:** Replaced wildcard `allow_origins=["*"]` in Python FastAPI CORS middleware with configurable `ALLOWED_ORIGINS` env variable. Default: `http://localhost:8000`.
+- **Admin Role-Based Access:** Added `is_admin` boolean column to `users` table with migration, `IsAdmin` middleware, and route guard on all `/admin/*` routes. Non-admin users now get 403 Forbidden.
+
+### 🎨 Report Show Page — Complete Redesign
+
+- **Interactive Charts:** Installed `chart.js` + `vue-chartjs`. Added `InteractiveChart.vue` component supporting Bar, Doughnut, and Line charts with hover tooltips, animated transitions, and responsive layout. Charts auto-build from `summary_stats` data (top products, revenue distribution, mean vs median).
+- **Data Quality Card:** New `DataQualityCard.vue` with SVG circular progress visualization showing clean data percentage, color-coded quality rating, and cleaning log breakdown (duplicates, null rows, encoding fixes).
+- **Stats Detail Panel:** New collapsible `StatsDetailPanel.vue` showing per-column statistics table for numeric columns (min, max, mean, median, std dev, null count) and text column cards with sample values and dtype badges.
+- **Insight & Recommendations:** New `InsightRecommendation.vue` auto-generating business insights from summary_stats — growth rate trends, top product performers, optimization suggestions, revenue totals, and data quality warnings.
+- **Narrative Box Upgrade:** Redesigned `NarrativeBox.vue` with copy-to-clipboard, print-to-new-window, word count display, and per-provider color-coded badges (Gemini=blue, Kimi=violet, GLM=orange, NVIDIA=green, MiniMax=pink, Claude=amber).
+- **Tab Switcher:** Interactive Chart.js charts and static Matplotlib chart images accessible via tab toggle.
+- **Quick Stats Row:** 4 metric cards — Total Baris, Baris Bersih, Kualitas Data (color-coded %), Waktu Proses.
+
+### ⚙️ Admin Panel — Bug Fix & Feature Enhancement
+
+- **Bug Fix:** Fixed `Call to a member function toISOString() on string` error by adding `'last_used_at' => 'datetime'` cast to `AIProvider` model.
+- **Edit Modal:** New modal for editing API key value (stored securely in `.env`), model ID, max tokens, timeout, and priority per provider. API key values are never displayed in the UI — input uses password field.
+- **Drag-to-Reorder:** Providers can be reordered by dragging rows in the table, updating priority via `POST /admin/ai-providers/priority`.
+- **Error Log Section:** New section showing 5 most recent fallback errors with provider name, report ID, error message, and timestamp.
+- **Redesigned Table:** Cleaner layout with priority numbers, model ID badges, compact toggle switches, and icon-based action buttons (gear for edit, refresh for reset).
+
+### 🏗️ Architecture Improvements
+
+- **Callback Retry Mechanism:** Python service now retries failed callbacks with exponential backoff (3 attempts: 2s, 4s, 8s). Applies to both success and error callbacks, preventing data loss if Laravel is temporarily down.
+- **File Cleanup Command:** New `php artisan app:cleanup-uploads` command to delete upload files from completed/failed reports older than configurable days (default: 30). Supports `--dry-run` for preview and shows progress bar + summary table.
+- **Better Token Estimation:** Replaced naive `len(narrative)` character count with word-based estimation (`len(text.split()) * 1.3`), significantly more accurate for Bahasa Indonesia/English tokenization.
+
+### 🚀 Developer Experience
+
+- **Single Command Startup:** `composer run dev` now runs all 4 services simultaneously via `concurrently`: Laravel server, Queue worker, Vite HMR, and Python uvicorn. Replaced `php artisan pail` (problematic on Windows) with Python service.
+- **README Update:** Added "Quick Start" section with `composer run dev` as primary method, service table with color codes and URLs, collapsible manual terminal instructions.
+
+### New Files
+- `config/python-service.php` — Centralized Python service configuration
+- `app/Http/Middleware/IsAdmin.php` — Admin role gate middleware
+- `app/Console/Commands/CleanupOldUploads.php` — Artisan cleanup command
+- `database/migrations/2026_04_28_043000_add_is_admin_to_users_table.php` — Admin column migration
+- `resources/js/Components/InteractiveChart.vue` — Chart.js wrapper component
+- `resources/js/Components/DataQualityCard.vue` — Data quality SVG visualization
+- `resources/js/Components/StatsDetailPanel.vue` — Collapsible column stats panel
+- `resources/js/Components/InsightRecommendation.vue` — Auto-generated business insights
+
+### Modified Files
+- `app/Services/PythonServiceClient.php` — env()→config(), HMAC signing
+- `app/Http/Controllers/Api/ReportCallbackController.php` — HMAC validation
+- `app/Http/Controllers/Admin/AIProviderController.php` — Edit provider, .env update
+- `app/Models/AIProvider.php` — datetime cast, expanded fillable
+- `app/Models/User.php` — is_admin field + isAdmin() method
+- `bootstrap/app.php` — Admin middleware alias registration
+- `routes/web.php` — Admin middleware + PUT route for provider update
+- `database/seeders/DatabaseSeeder.php` — is_admin flag for test user
+- `python-service/main.py` — HMAC signing, CORS restriction, callback retry
+- `python-service/ai_provider.py` — Word-based token estimation
+- `resources/js/Pages/Report/Show.vue` — Complete page rebuild
+- `resources/js/Pages/Admin/AIProviders.vue` — Redesigned with edit modal + drag reorder
+- `resources/js/Components/NarrativeBox.vue` — Copy/print/word count
+- `.env` / `.env.example` — ALLOWED_ORIGINS, PYTHON_SERVICE_TIMEOUT
+- `composer.json` — Python uvicorn in dev script
+- `package.json` — chart.js + vue-chartjs dependencies
+- `README.md` — composer run dev quick start section
+
+---
+
 ## [2026-04-28] - DataNarasi AI Integration & Fixes
 
 ### Added
