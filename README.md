@@ -180,22 +180,46 @@ AI_PROVIDER_ORDER=gemini,kimi,glm,nvidia,minimax,claude
 
 ### Running Locally
 
-You need **3 terminals** (or use `composer dev` for terminals 1-3):
+#### ⚡ Quick Start (Recommended)
+
+Run **all 4 services** with a single command:
+
+```bash
+composer run dev
+```
+
+This starts everything concurrently with color-coded output:
+
+| Service | Color | URL |
+|---------|-------|-----|
+| 🔵 **server** — Laravel | Blue | `http://localhost:8000` |
+| 🟣 **queue** — Job Worker | Purple | — |
+| 🔴 **vite** — Frontend HMR | Pink | `http://localhost:5173` |
+| 🟢 **python** — FastAPI | Green | `http://localhost:8001` |
+
+> Press `Ctrl+C` to stop all services at once.
+
+#### 🔧 Manual (4 Separate Terminals)
+
+<details>
+<summary>Click to expand individual commands</summary>
 
 ```bash
 # Terminal 1: Laravel server
 php artisan serve
 
-# Terminal 2: Vite dev server
-npm run dev
-
-# Terminal 3: Queue worker
+# Terminal 2: Queue worker
 php artisan queue:listen
+
+# Terminal 3: Vite dev server
+npm run dev
 
 # Terminal 4: Python microservice
 cd python-service
 uvicorn main:app --reload --port 8001
 ```
+
+</details>
 
 Then open **http://localhost:8000** and login with:
 | Field | Value |
