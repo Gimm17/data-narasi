@@ -77,6 +77,7 @@ class ProcessRequest(BaseModel):
     tone: str
     callback_url: str
     callback_secret: Optional[str] = None
+    provider_order: Optional[list] = None  # Dynamic order dari admin panel DB
 
 
 class HealthResponse(BaseModel):
@@ -234,7 +235,8 @@ def _process_report_background(request: ProcessRequest):
         narrative_result = ai_manager.generate(
             user_prompt,
             system_prompt,
-            max_tokens=1024
+            max_tokens=1024,
+            provider_order=request.provider_order
         )
 
         # Prepare callback data

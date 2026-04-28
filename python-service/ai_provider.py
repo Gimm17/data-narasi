@@ -81,7 +81,7 @@ class AIProviderManager:
 
         logger.info(f"Total providers loaded: {len(self.providers)}/{len(self.provider_order)}")
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> Dict[str, any]:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, provider_order: Optional[List[str]] = None) -> Dict[str, any]:
         """
         Generate narasi dengan fallback otomatis
 
@@ -89,6 +89,7 @@ class AIProviderManager:
             prompt: User prompt
             system_prompt: System prompt
             max_tokens: Maximum tokens
+            provider_order: Optional override untuk urutan provider (dari DB admin panel)
 
         Returns:
             Dict dengan:
@@ -102,7 +103,17 @@ class AIProviderManager:
         logs = []
         start_time = time.time()
 
-        for attempt, provider_name in enumerate(self.provider_order, 1):
+        # Gunakan order dari parameter (admin panel DB) jika diberikan,
+        # fallback ke self.provider_order (dari .env / default)
+        active_order = self.provider_order
+        if provider_order:
+            # Filter hanya provider yang dikenal
+            valid_order = [p for p in provider_order if p in self.PROVIDER_CLASSES]
+            if valid_order:
+                active_order = valid_order
+                logger.info(f"Using dynamic provider order from Laravel DB: {active_order}")
+
+        for attempt, provider_name in enumerate(active_order, 1):
             # Cek apakah provider tersedia
             if provider_name not in self.providers:
                 logs.append({

@@ -55,6 +55,32 @@ class PythonServiceClient
         // Normalize path separators untuk kompatibilitas Python di Windows
         $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rawPath);
 
+        // Ambil urutan provider dari database (admin panel) — sorted by priority
+        // Gunakan api_key_env sebagai basis mapping karena lebih reliable dari display name
+        $providerOrder = \App\Models\AIProvider::where('is_enabled', true)
+            ->orderBy('priority', 'asc')
+            ->pluck('api_key_env')
+            ->toArray();
+
+        // Map api_key_env → Python slug
+        $envToSlug = [
+            'GEMINI_API_KEY' => 'gemini',
+            'KIMI_API_KEY' => 'kimi',
+            'GLM_API_KEY' => 'glm',
+            'NVIDIA_API_KEY' => 'nvidia',
+            'MINIMAX_API_KEY' => 'minimax',
+            'CLAUDE_API_KEY' => 'claude',
+        ];
+
+        $mappedOrder = collect($providerOrder)
+            ->map(fn ($env) => $envToSlug[$env] ?? null)
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        Log::info("Provider order from DB for Report {$report->id}: " . implode(' → ', $mappedOrder));
+
         $payload = [
             'report_id' => $report->id,
             'file_path' => $filePath,
@@ -62,6 +88,7 @@ class PythonServiceClient
             'tone' => $report->tone,
             'callback_url' => $callbackUrl,
             'callback_secret' => $this->secret,
+            'provider_order' => $mappedOrder,
         ];
 
         try {
@@ -72,6 +99,7 @@ class PythonServiceClient
                 Log::info("Report ID {$report->id} diterima oleh Python service (background processing)", [
                     'response' => $response->json(),
                     'status' => $response->status(),
+                    'provider_order' => $mappedOrder,
                 ]);
             } else {
                 throw new Exception("Python service return error: " . $response->body());
