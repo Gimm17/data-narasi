@@ -66,6 +66,61 @@ class PromptBuilder:
                 'Berapa turnover inventory?'
             ]
         },
+        'sdm': {
+            'focus': 'fokus pada kinerja karyawan, turnover rate, kepuasan kerja, absensi, dan demografi SDM.',
+            'metrics': 'turnover rate, absensi, skor kinerja, kepuasan karyawan, distribusi departemen',
+            'business_questions': [
+                'Bagaimana tingkat turnover karyawan?',
+                'Departemen mana yang paling produktif?',
+                'Ada pola absensi yang mengkhawatirkan?',
+                'Bagaimana distribusi skor kinerja?',
+                'Apakah ada korelasi antara masa kerja dan performa?'
+            ]
+        },
+        'akademik': {
+            'focus': 'fokus pada performa akademik, distribusi nilai, tingkat kelulusan, dan tren per mata pelajaran/kelas.',
+            'metrics': 'nilai rata-rata, distribusi grade, tingkat kelulusan, perbandingan antar kelas',
+            'business_questions': [
+                'Mata pelajaran mana dengan rata-rata tertinggi/terendah?',
+                'Bagaimana distribusi nilai (A/B/C/D/E)?',
+                'Berapa tingkat kelulusan?',
+                'Ada tren perbaikan atau penurunan antar periode?',
+                'Kelas mana yang butuh perhatian khusus?'
+            ]
+        },
+        'kesehatan': {
+            'focus': 'fokus pada data pasien, prevalensi penyakit, tren kesehatan, dan indikator klinis.',
+            'metrics': 'jumlah kasus, prevalensi, rata-rata indikator klinis, distribusi diagnosa',
+            'business_questions': [
+                'Diagnosa apa yang paling umum?',
+                'Bagaimana tren kunjungan pasien?',
+                'Ada pola musiman pada kasus tertentu?',
+                'Bagaimana distribusi usia dan gender pasien?',
+                'Indikator klinis mana yang perlu diperhatikan?'
+            ]
+        },
+        'logistik': {
+            'focus': 'fokus pada efisiensi pengiriman, lead time, biaya transportasi, dan ketepatan waktu.',
+            'metrics': 'on-time delivery rate, average lead time, biaya per pengiriman, volume pengiriman',
+            'business_questions': [
+                'Berapa persen pengiriman tepat waktu?',
+                'Rute mana yang paling efisien/mahal?',
+                'Bagaimana tren volume pengiriman?',
+                'Ada bottleneck di proses mana?',
+                'Bagaimana perbandingan biaya antar kurir/jalur?'
+            ]
+        },
+        'survey': {
+            'focus': 'fokus pada distribusi jawaban, sentimen responden, korelasi antar variabel, dan insight kualitatif.',
+            'metrics': 'distribusi jawaban, skor rata-rata per kategori, net promoter score, sentimen',
+            'business_questions': [
+                'Bagaimana distribusi jawaban per pertanyaan?',
+                'Aspek mana yang paling positif/negatif?',
+                'Ada korelasi antar variabel?',
+                'Bagaimana segmentasi responden?',
+                'Apa rekomendasi berdasarkan feedback?'
+            ]
+        },
         'umum': {
             'focus': 'analisis deskriptif umum dari data dengan insight yang relevan.',
             'metrics': 'ringkasan statistik deskriptif',
@@ -88,6 +143,15 @@ Gunakan bahasa yang santai dan mudah dipahami. Boleh menggunakan analogi sederha
 ''',
         'teknis': '''
 Gunakan bahasa teknis dan presisi. Sebutkan metrik spesifik, rumus, atau terminologi domain yang relevan. Asumsikan pembaca memiliki pengetahuan teknis. Cocok untuk analisis mendalam atau report teknis.
+''',
+        'eksekutif': '''
+Tulis ringkas dan langsung ke inti. Fokus pada KPI, bottom-line impact, dan rekomendasi strategis. Gunakan bullet points sebanyak mungkin. Buat pembaca bisa memahami situasi dalam 1 menit. Cocok untuk CEO, direktur, atau stakeholder yang sibuk.
+''',
+        'storytelling': '''
+Tulis seperti cerita dengan alur naratif yang mengalir. Gunakan data sebagai "plot point" dan bangun tension/klimaks di insight utama. Buat pembaca merasa sedang mengikuti sebuah perjalanan penemuan. Cocok untuk presentasi ke audiens non-teknis agar data terasa hidup dan menarik.
+''',
+        'akademis': '''
+Gunakan gaya penulisan ilmiah/akademis. Sertakan referensi metodologi analisis, confidence level, dan batasan (limitations) dari analisis ini. Gunakan terminologi statistik yang tepat (mean, median, standar deviasi, distribusi). Sebutkan asumsi yang digunakan. Cocok untuk skripsi, jurnal, tugas kuliah, atau laporan penelitian.
 '''
     }
 
@@ -98,7 +162,7 @@ Gunakan bahasa teknis dan presisi. Sebutkan metrik spesifik, rumus, atau termino
         Args:
             stats: Hasil analisis dari DataAnalyzer
             cleaning_log: Log pembersihan data
-            tone: Tone narasi (formal, santai, teknis)
+            tone: Tone narasi (formal, santai, teknis, eksekutif, storytelling, akademis)
 
         Returns:
             Tuple of (system_prompt, user_prompt)

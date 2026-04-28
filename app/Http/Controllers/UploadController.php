@@ -23,10 +23,14 @@ class UploadController extends Controller
             'analysisTypes' => array_map(fn($t) => [
                 'value' => $t->value,
                 'label' => $t->label(),
+                'icon' => $t->icon(),
+                'description' => $t->description(),
             ], \App\Enums\AnalysisType::cases()),
             'tones' => array_map(fn($t) => [
                 'value' => $t->value,
                 'label' => $t->label(),
+                'icon' => $t->icon(),
+                'description' => $t->description(),
             ], \App\Enums\NarrativeTone::cases()),
         ]);
     }
