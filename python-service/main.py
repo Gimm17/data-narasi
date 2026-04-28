@@ -9,6 +9,10 @@ from pydantic import BaseModel
 from typing import Optional
 import logging
 import os
+import hashlib
+import hmac
+import json
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -47,14 +51,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# CORS middleware — baca allowed origins dari env, jangan wildcard di production
+_allowed_origins_raw = os.getenv('ALLOWED_ORIGINS', 'http://localhost:8000')
+ALLOWED_ORIGINS = [origin.strip() for origin in _allowed_origins_raw.split(',') if origin.strip()]
+logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Di production, specify Laravel domain
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Callback retry configuration
+CALLBACK_MAX_RETRIES = 3
+CALLBACK_RETRY_BASE_DELAY = 2  # seconds, exponential: 2s, 4s, 8s
+
 
 # Request models
 class ProcessRequest(BaseModel):
@@ -78,6 +91,72 @@ analyzer = DataAnalyzer()
 chart_gen = ChartGenerator()
 prompt_builder = PromptBuilder()
 ai_manager = AIProviderManager()
+
+
+def _generate_hmac_signature(payload: str, secret: str) -> str:
+    """
+    Generate HMAC-SHA256 signature dari JSON payload
+    Digunakan untuk memvalidasi callback di Laravel side
+    """
+    return hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+
+
+def _send_callback_with_retry(url: str, data: dict, secret: str, max_retries: int = CALLBACK_MAX_RETRIES) -> bool:
+    """
+    Kirim callback ke Laravel dengan retry mechanism
+    Exponential backoff: 2s, 4s, 8s
+
+    Returns:
+        True jika callback berhasil, False jika semua retry gagal
+    """
+    import httpx
+
+    json_payload = json.dumps(data, default=str)
+
+    # Generate HMAC signature dari payload
+    hmac_signature = _generate_hmac_signature(json_payload, secret)
+
+    headers = {
+        'X-Callback-Secret': secret or '',
+        'X-Callback-Signature': hmac_signature,
+        'Content-Type': 'application/json',
+    }
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(
+                    url,
+                    content=json_payload,
+                    headers=headers,
+                )
+
+                if response.status_code == 200:
+                    logger.info(f"✅ Callback berhasil (attempt {attempt}/{max_retries})")
+                    return True
+                else:
+                    logger.warning(
+                        f"⚠️  Callback return {response.status_code} "
+                        f"(attempt {attempt}/{max_retries}): {response.text[:200]}"
+                    )
+
+        except Exception as e:
+            logger.warning(
+                f"⚠️  Callback failed (attempt {attempt}/{max_retries}): {str(e)}"
+            )
+
+        # Retry dengan exponential backoff (kecuali attempt terakhir)
+        if attempt < max_retries:
+            delay = CALLBACK_RETRY_BASE_DELAY ** attempt  # 2s, 4s, 8s
+            logger.info(f"⏳ Retrying callback in {delay}s...")
+            time.sleep(delay)
+
+    logger.error(f"❌ Callback gagal setelah {max_retries} attempts")
+    return False
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -120,8 +199,6 @@ def _process_report_background(request: ProcessRequest):
     Background task: jalankan seluruh pipeline processing
     Dipanggil oleh BackgroundTasks agar /process endpoint tidak timeout
     """
-    import httpx
-
     try:
         logger.info(f"[BG] Processing Report ID: {request.report_id}")
         logger.info(f"[BG] File: {request.file_path}")
@@ -174,22 +251,18 @@ def _process_report_background(request: ProcessRequest):
             'ai_usage_logs': narrative_result.get('logs', [])
         }
 
-        # Send callback ke Laravel (synchronous karena sudah di background)
+        # Send callback ke Laravel dengan retry mechanism
         logger.info("[BG] Sending callback to Laravel...")
-        with httpx.Client(timeout=30.0) as client:
-            callback_response = client.post(
-                request.callback_url,
-                json=callback_data,
-                headers={
-                    'X-Callback-Secret': request.callback_secret or '',
-                    'Content-Type': 'application/json'
-                }
-            )
+        success = _send_callback_with_retry(
+            url=request.callback_url,
+            data=callback_data,
+            secret=request.callback_secret or '',
+        )
 
-            if callback_response.status_code == 200:
-                logger.info(f"✅ Report {request.report_id} berhasil diproses!")
-            else:
-                logger.error(f"❌ Callback failed: {callback_response.status_code}")
+        if success:
+            logger.info(f"✅ Report {request.report_id} berhasil diproses dan callback terkirim!")
+        else:
+            logger.error(f"❌ Report {request.report_id} diproses tapi callback gagal setelah semua retry")
 
     except FileNotFoundError as e:
         logger.error(f"[BG] File not found: {request.file_path}")
@@ -201,33 +274,29 @@ def _process_report_background(request: ProcessRequest):
 
 
 def _send_error_callback(request: ProcessRequest, error_message: str):
-    """Kirim callback error ke Laravel saat background processing gagal"""
-    import httpx
+    """Kirim callback error ke Laravel saat background processing gagal (with retry)"""
+    error_data = {
+        'status': 'failed',
+        'ai_narrative': None,
+        'summary_stats': {},
+        'cleaning_log': {},
+        'chart_paths': [],
+        'clean_path': None,
+        'clean_rows': 0,
+        'ai_provider_used': None,
+        'processing_time_ms': 0,
+        'ai_usage_logs': [],
+        'error_message': error_message
+    }
 
-    try:
-        with httpx.Client(timeout=10.0) as client:
-            client.post(
-                request.callback_url,
-                json={
-                    'status': 'failed',
-                    'ai_narrative': None,
-                    'summary_stats': {},
-                    'cleaning_log': {},
-                    'chart_paths': [],
-                    'clean_path': None,
-                    'clean_rows': 0,
-                    'ai_provider_used': None,
-                    'processing_time_ms': 0,
-                    'ai_usage_logs': [],
-                    'error_message': error_message
-                },
-                headers={
-                    'X-Callback-Secret': request.callback_secret or '',
-                    'Content-Type': 'application/json'
-                }
-            )
-    except Exception as cb_err:
-        logger.error(f"[BG] Error callback also failed: {cb_err}")
+    success = _send_callback_with_retry(
+        url=request.callback_url,
+        data=error_data,
+        secret=request.callback_secret or '',
+    )
+
+    if not success:
+        logger.error(f"[BG] Error callback also failed after all retries for Report {request.report_id}")
 
 
 if __name__ == "__main__":

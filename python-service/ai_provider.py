@@ -132,7 +132,7 @@ class AIProviderManager:
                     'status': 'success',
                     'attempt_number': attempt,
                     'error_message': None,
-                    'tokens_used': len(narrative),  # Estimasi kasar
+                    'tokens_used': max(1, int(len(narrative.split()) * 1.3)),  # Estimasi: 1 token ≈ 0.75 kata
                     'response_time_ms': processing_time
                 })
 

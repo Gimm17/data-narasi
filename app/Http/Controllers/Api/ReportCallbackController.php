@@ -32,12 +32,17 @@ class ReportCallbackController extends Controller
     public function __invoke(Request $request, Report $report)
     {
         try {
-            // Validasi callback secret
+            // Validasi callback: HMAC signature (primary) + shared secret (fallback)
+            $callbackSignature = $request->header('X-Callback-Signature');
             $callbackSecret = $request->header('X-Callback-Secret') ??
                              $request->input('callback_secret');
+            $rawPayload = $request->getContent();
 
-            if (!$this->pythonClient->validateCallback($callbackSecret)) {
-                Log::warning("Invalid callback secret untuk Report ID {$report->id}");
+            if (!$this->pythonClient->validateCallback($callbackSignature, $callbackSecret, $rawPayload)) {
+                Log::warning("Invalid callback authentication untuk Report ID {$report->id}", [
+                    'has_signature' => !empty($callbackSignature),
+                    'has_secret' => !empty($callbackSecret),
+                ]);
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 

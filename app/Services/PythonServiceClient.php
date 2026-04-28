@@ -20,22 +20,23 @@ class PythonServiceClient
     protected string $baseUrl;
 
     /**
-     * Secret token untuk validasi callback
+     * Secret token untuk validasi callback (HMAC signing)
      */
     protected string $secret;
 
     /**
      * Request timeout dalam detik
      */
-    protected int $timeout = 10;
+    protected int $timeout;
 
     /**
-     * Constructor
+     * Constructor — membaca dari config() bukan env() agar cache-safe
      */
     public function __construct()
     {
-        $this->baseUrl = rtrim(env('PYTHON_SERVICE_URL', 'http://localhost:8001'), '/');
-        $this->secret = env('PYTHON_SERVICE_SECRET', 'rahasia-internal-token-ganti-ini');
+        $this->baseUrl = rtrim(config('python-service.url', 'http://localhost:8001'), '/');
+        $this->secret = config('python-service.secret', 'rahasia-internal-token-ganti-ini');
+        $this->timeout = config('python-service.timeout', 10);
     }
 
     /**
@@ -87,11 +88,40 @@ class PythonServiceClient
     }
 
     /**
-     * Validasi callback secret dari Python service
-     * Mencegah callback dari source yang tidak sah
+     * Generate HMAC-SHA256 signature dari payload
+     * Digunakan untuk memvalidasi bahwa callback berasal dari Python service
+     * dan payload tidak di-tamper
+     *
+     * @param string $payload JSON-encoded payload
+     * @return string HMAC-SHA256 hex digest
      */
-    public function validateCallback(?string $secret): bool
+    public function generateHmacSignature(string $payload): string
     {
+        return hash_hmac('sha256', $payload, $this->secret);
+    }
+
+    /**
+     * Validasi callback dari Python service
+     * Primary: HMAC signature validation (lebih aman)
+     * Fallback: Shared secret token (backward compatibility)
+     *
+     * @param string|null $signature HMAC signature dari header X-Callback-Signature
+     * @param string|null $secret Shared secret dari header X-Callback-Secret
+     * @param string|null $rawPayload Raw JSON body untuk HMAC verification
+     * @return bool
+     */
+    public function validateCallback(?string $signature, ?string $secret, ?string $rawPayload = null): bool
+    {
+        // Primary: HMAC signature validation
+        if ($signature && $rawPayload) {
+            $expectedSignature = $this->generateHmacSignature($rawPayload);
+            if (hash_equals($expectedSignature, $signature)) {
+                return true;
+            }
+            Log::warning('HMAC signature mismatch — falling back to secret check');
+        }
+
+        // Fallback: Simple shared secret check
         return $secret === $this->secret;
     }
 
