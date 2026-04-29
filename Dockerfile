@@ -6,7 +6,7 @@ FROM node:20-alpine AS frontend
 WORKDIR /app
 
 # Install PHP (minimal) for composer — needed for Ziggy route generation
-RUN apk add --no-cache php83 php83-phar php83-iconv php83-mbstring php83-openssl composer
+RUN apk add --no-cache php84 php84-phar php84-iconv php84-mbstring php84-openssl composer
 
 # Copy composer files and install Ziggy (needed by vite build)
 COPY composer.json composer.lock ./
@@ -31,7 +31,7 @@ RUN npm run build
 # ============================================
 # Stage 2: PHP production image
 # ============================================
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Install system deps in ONE layer
 RUN apk add --no-cache \
