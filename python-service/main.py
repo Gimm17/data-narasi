@@ -293,7 +293,7 @@ def _process_report_background(request: ProcessRequest):
 
         # Step 1: Data Cleansing
         logger.info("[BG] Step 1: Data Cleansing...")
-        clean_result = cleaner.run(request.file_path)
+        clean_result = cleaner.run(str(file_path))
 
         # Step 1.5: Row limit check — sampling jika terlalu besar
         if len(clean_result['df']) > 100_000:
