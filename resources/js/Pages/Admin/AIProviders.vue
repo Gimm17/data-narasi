@@ -8,6 +8,7 @@ const props = defineProps<{
     providers: Array<{
         id: number
         name: string
+        slug: string
         model_id: string
         is_enabled: boolean
         priority: number
@@ -40,6 +41,7 @@ const props = defineProps<{
         error_message: string | null
         created_at: string
     }>
+    modelCatalog: Record<string, Array<{ id: string; name: string; desc: string }>>
 }>()
 
 // ── Stats ──
@@ -54,6 +56,7 @@ const showEditModal = ref(false)
 const editingProvider = reactive({
     id: 0,
     name: '',
+    slug: '',
     api_key_env: '',
     api_key_value: '',
     model_id: '',
@@ -63,10 +66,13 @@ const editingProvider = reactive({
 })
 const isSaving = ref(false)
 const saveMessage = ref('')
+const showModelDropdown = ref(false)
+const modelSearch = ref('')
 
 const openEditModal = (provider: any) => {
     editingProvider.id = provider.id
     editingProvider.name = provider.name
+    editingProvider.slug = provider.slug || ''
     editingProvider.api_key_env = provider.api_key_env
     editingProvider.api_key_value = ''
     editingProvider.model_id = provider.model_id
@@ -74,7 +80,23 @@ const openEditModal = (provider: any) => {
     editingProvider.timeout_seconds = provider.timeout_seconds
     editingProvider.priority = provider.priority
     showEditModal.value = true
+    showModelDropdown.value = false
+    modelSearch.value = ''
     saveMessage.value = ''
+}
+
+const availableModels = computed(() => {
+    const slug = editingProvider.slug
+    const models = props.modelCatalog[slug] || []
+    if (!modelSearch.value) return models
+    const q = modelSearch.value.toLowerCase()
+    return models.filter(m => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q))
+})
+
+const selectModel = (modelId: string) => {
+    editingProvider.model_id = modelId
+    showModelDropdown.value = false
+    modelSearch.value = ''
 }
 
 const closeEditModal = () => {
@@ -411,13 +433,63 @@ const getTodayErrorRate = (provider: any) => {
                         </div>
 
                         <!-- Model ID -->
-                        <div>
+                        <div class="relative">
                             <label class="block text-xs font-medium text-gray-500 mb-1">Model ID</label>
-                            <input
-                                v-model="editingProvider.model_id"
-                                type="text"
-                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors font-mono"
-                            />
+                            <div class="flex gap-2">
+                                <input
+                                    v-model="editingProvider.model_id"
+                                    type="text"
+                                    placeholder="Ketik atau pilih dari dropdown"
+                                    class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors font-mono"
+                                />
+                                <button
+                                    v-if="availableModels.length > 0 || modelCatalog[editingProvider.slug]"
+                                    @click="showModelDropdown = !showModelDropdown"
+                                    type="button"
+                                    class="px-2.5 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors"
+                                    title="Pilih model"
+                                >
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Model Dropdown -->
+                            <div
+                                v-if="showModelDropdown"
+                                class="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto"
+                            >
+                                <div class="sticky top-0 bg-white border-b border-gray-100 p-2">
+                                    <input
+                                        v-model="modelSearch"
+                                        type="text"
+                                        placeholder="Cari model..."
+                                        class="w-full text-xs border border-gray-200 rounded px-2.5 py-1.5 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                    />
+                                </div>
+                                <div v-if="availableModels.length === 0" class="px-3 py-4 text-xs text-gray-400 text-center">
+                                    Tidak ada model yang cocok
+                                </div>
+                                <button
+                                    v-for="model in availableModels"
+                                    :key="model.id"
+                                    @click="selectModel(model.id)"
+                                    class="w-full text-left px-3 py-2.5 hover:bg-teal-50 transition-colors border-b border-gray-50 last:border-0"
+                                    :class="{ 'bg-teal-50/50': editingProvider.model_id === model.id }"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-medium text-gray-800">{{ model.name }}</span>
+                                        <span v-if="editingProvider.model_id === model.id" class="text-teal-600 text-xs">✓</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ model.id }}</div>
+                                    <div class="text-[10px] text-gray-400 mt-0.5">{{ model.desc }}</div>
+                                </button>
+                            </div>
+
+                            <p v-if="!modelCatalog[editingProvider.slug]" class="text-[10px] text-gray-400 mt-1">
+                                Katalog model belum tersedia untuk provider ini. Ketik model ID manual.
+                            </p>
                         </div>
 
                         <!-- Max Tokens + Timeout -->

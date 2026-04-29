@@ -42,6 +42,7 @@ class AIProviderController extends Controller
             return [
                 'id' => $provider->id,
                 'name' => $provider->name,
+                'slug' => $provider->slug,
                 'model_id' => $provider->model_id,
                 'is_enabled' => $provider->is_enabled,
                 'priority' => $provider->priority,
@@ -81,6 +82,7 @@ class AIProviderController extends Controller
             'providers' => $providersWithStats,
             'todayStats' => $todayStats,
             'recentFallbacks' => $recentFallbacks,
+            'modelCatalog' => config('ai-models', []),
         ]);
     }
 
