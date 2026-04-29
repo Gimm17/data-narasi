@@ -206,9 +206,23 @@ def _process_report_background(request: ProcessRequest):
         logger.info(f"[BG] Analysis Type: {request.analysis_type}")
         logger.info(f"[BG] Tone: {request.tone}")
 
+        # Step 0: File Validation
+        file_path = Path(request.file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File tidak ditemukan: {request.file_path}")
+        file_size_mb = file_path.stat().st_size / (1024 * 1024)
+        if file_size_mb > 15:
+            raise ValueError(f"File terlalu besar: {file_size_mb:.1f}MB (maks 15MB)")
+        logger.info(f"[BG] File size: {file_size_mb:.2f}MB — OK")
+
         # Step 1: Data Cleansing
         logger.info("[BG] Step 1: Data Cleansing...")
         clean_result = cleaner.run(request.file_path)
+
+        # Step 1.5: Row limit check — sampling jika terlalu besar
+        if len(clean_result['df']) > 100_000:
+            logger.warning(f"[BG] Large dataset: {len(clean_result['df'])} rows, sampling to 100K")
+            clean_result['df'] = clean_result['df'].sample(n=100_000, random_state=42).reset_index(drop=True)
 
         # Step 2: Statistical Analysis
         logger.info("[BG] Step 2: Statistical Analysis...")

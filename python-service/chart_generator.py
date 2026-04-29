@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from pathlib import Path
 import logging
 from typing import Dict, List, Any
@@ -43,8 +44,13 @@ class ChartGenerator:
         chart_paths = []
 
         try:
-            # Buat folder untuk charts
-            chart_folder = Path(f"storage/charts/{report_id}")
+            # Buat folder untuk charts — simpan di Laravel storage/app/public/charts
+            laravel_base = os.environ.get('LARAVEL_BASE_PATH', '')
+            if laravel_base:
+                chart_folder = Path(laravel_base) / 'storage' / 'app' / 'public' / 'charts' / str(report_id)
+            else:
+                # Fallback: asumsi Python service di subfolder project Laravel
+                chart_folder = Path(__file__).parent.parent / 'storage' / 'app' / 'public' / 'charts' / str(report_id)
             chart_folder.mkdir(parents=True, exist_ok=True)
 
             # Chart 1: Line chart untuk tren (jika ada kolom tanggal)
@@ -75,7 +81,17 @@ class ChartGenerator:
 
             logger.info(f"✅ Generated {len(chart_paths)} charts")
 
-            return chart_paths
+            # Normalize paths ke relative (charts/{id}/file.png) untuk Laravel Storage::url()
+            relative_paths = []
+            for p in chart_paths:
+                p_str = str(p).replace('\\', '/')
+                idx = p_str.find('charts/')
+                if idx >= 0:
+                    relative_paths.append(p_str[idx:])
+                else:
+                    relative_paths.append(p_str)
+
+            return relative_paths
 
         except Exception as e:
             logger.error(f"Error generating charts: {str(e)}")
