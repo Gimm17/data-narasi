@@ -75,6 +75,8 @@ CALLBACK_RETRY_BASE_DELAY = 2  # seconds, exponential: 2s, 4s, 8s
 class ProcessRequest(BaseModel):
     report_id: int
     file_path: str
+    file_name: Optional[str] = None
+    file_content: Optional[str] = None  # Base64 encoded file content
     analysis_type: str
     tone: str
     callback_url: str
@@ -264,10 +266,26 @@ def _process_report_background(request: ProcessRequest):
         logger.info(f"[BG] Analysis Type: {request.analysis_type}")
         logger.info(f"[BG] Tone: {request.tone}")
 
-        # Step 0: File Validation
+        # Step 0: File Resolution — handle cross-container file transfer
+        import base64
         file_path = Path(request.file_path)
+
+        # Jika file_content dikirim (base64), simpan ke local storage
+        if request.file_content:
+            logger.info("[BG] Received file via base64 transfer (cross-container)")
+            storage_dir = Path(__file__).parent / "storage" / "uploads"
+            storage_dir.mkdir(parents=True, exist_ok=True)
+
+            file_name = request.file_name or f"report_{request.report_id}.csv"
+            file_path = storage_dir / file_name
+
+            file_bytes = base64.b64decode(request.file_content)
+            file_path.write_bytes(file_bytes)
+            logger.info(f"[BG] File saved locally: {file_path} ({len(file_bytes)} bytes)")
+
+        # Validasi file exists
         if not file_path.exists():
-            raise FileNotFoundError(f"File tidak ditemukan: {request.file_path}")
+            raise FileNotFoundError(f"File tidak ditemukan: {file_path}")
         file_size_mb = file_path.stat().st_size / (1024 * 1024)
         if file_size_mb > 15:
             raise ValueError(f"File terlalu besar: {file_size_mb:.1f}MB (maks 15MB)")

@@ -55,6 +55,16 @@ class PythonServiceClient
         // Normalize path separators untuk kompatibilitas Python di Windows
         $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rawPath);
 
+        // Baca file content dan encode base64 untuk dikirim ke Python service
+        // Karena Python service jalan di container terpisah, tidak bisa akses filesystem Laravel
+        $fileContent = null;
+        $fileName = basename($filePath);
+        if (file_exists($filePath)) {
+            $fileContent = base64_encode(file_get_contents($filePath));
+        } else {
+            throw new Exception("File tidak ditemukan: {$filePath}");
+        }
+
         // Ambil urutan provider dari database (admin panel) — sorted by priority
         // Gunakan kolom slug langsung dari DB — tidak perlu mapping hardcoded
         $mappedOrder = \App\Models\AIProvider::where('is_enabled', true)
@@ -70,6 +80,8 @@ class PythonServiceClient
         $payload = [
             'report_id' => $report->id,
             'file_path' => $filePath,
+            'file_name' => $fileName,
+            'file_content' => $fileContent,
             'analysis_type' => $report->dataset_type,
             'tone' => $report->tone,
             'callback_url' => $callbackUrl,
