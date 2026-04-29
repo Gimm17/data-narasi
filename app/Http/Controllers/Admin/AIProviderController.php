@@ -236,7 +236,7 @@ class AIProviderController extends Controller
             }
 
             // Kirim request ke Python service
-            $pythonUrl = config('services.python.url', 'http://localhost:8001');
+            $pythonUrl = config('python-service.url', 'http://localhost:8001');
 
             $response = Http::timeout(15)
                 ->post("{$pythonUrl}/check-api-key", [

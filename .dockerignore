@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Dev files
+.git/
+.github/
+tests/
+.env
+.env.local
+*.md
+*.log
+
+# Python service (deployed separately)
+python-service/
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
