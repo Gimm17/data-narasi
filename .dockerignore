@@ -1,6 +1,5 @@
-# Dependencies
+# Dependencies (installed fresh in Docker)
 node_modules/
-vendor/
 
 # Dev files
 .git/
