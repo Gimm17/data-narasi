@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import time
+import math
 from datetime import datetime
 from pathlib import Path
 
@@ -106,6 +107,36 @@ def _generate_hmac_signature(payload: str, secret: str) -> str:
     ).hexdigest()
 
 
+def _sanitize_for_json(obj):
+    """
+    Recursively sanitize data for JSON serialization.
+    Replaces NaN, Infinity, -Infinity (invalid in JSON) with None.
+    Converts numpy types to Python native types.
+    """
+    import numpy as np
+
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_sanitize_for_json(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    elif isinstance(obj, (np.integer,)):
+        return int(obj)
+    elif isinstance(obj, (np.floating,)):
+        val = float(obj)
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return val
+    elif isinstance(obj, np.ndarray):
+        return _sanitize_for_json(obj.tolist())
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    return obj
+
+
 def _send_callback_with_retry(url: str, data: dict, secret: str, max_retries: int = CALLBACK_MAX_RETRIES) -> bool:
     """
     Kirim callback ke Laravel dengan retry mechanism
@@ -116,7 +147,9 @@ def _send_callback_with_retry(url: str, data: dict, secret: str, max_retries: in
     """
     import httpx
 
-    json_payload = json.dumps(data, default=str)
+    # Sanitize data to replace NaN/Infinity with null (valid JSON)
+    sanitized_data = _sanitize_for_json(data)
+    json_payload = json.dumps(sanitized_data, default=str)
 
     # Generate HMAC signature dari payload
     hmac_signature = _generate_hmac_signature(json_payload, secret)
