@@ -18,6 +18,7 @@ class Report extends Model
      */
     protected $fillable = [
         'user_id',
+        'visitor_token',
         'title',
         'original_filename',
         'original_path',

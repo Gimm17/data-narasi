@@ -10,18 +10,18 @@ use Inertia\Inertia;
 
 /**
  * Controller untuk mengelola dan menampilkan reports
+ * Mendukung anonymous access via visitor_token cookie
  */
 class ReportController extends Controller
 {
     /**
-     * Tampilkan semua report milik user
+     * Tampilkan semua report milik visitor/user
      */
-    public function index()
+    public function index(Request $request)
     {
-        $reports = Auth::user()
-            ->reports()
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = $this->getReportsQuery($request);
+
+        $reports = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return Inertia::render('Report/Index', [
             'reports' => $reports,
@@ -31,10 +31,9 @@ class ReportController extends Controller
     /**
      * Tampilkan detail report
      */
-    public function show(Report $report)
+    public function show(Request $request, Report $report)
     {
-        // Policy check: user hanya bisa akses report miliknya sendiri
-        $this->authorizeReport($report);
+        $this->authorizeReport($request, $report);
 
         // Load relationships
         $report->load(['columns', 'outputs', 'usageLogs.provider']);
@@ -47,10 +46,9 @@ class ReportController extends Controller
     /**
      * Tampilkan halaman processing/loading
      */
-    public function processing(Report $report)
+    public function processing(Request $request, Report $report)
     {
-        // Policy check
-        $this->authorizeReport($report);
+        $this->authorizeReport($request, $report);
 
         return Inertia::render('Report/Processing', [
             'report' => [
@@ -66,10 +64,9 @@ class ReportController extends Controller
     /**
      * Return status report untuk polling (JSON)
      */
-    public function status(Report $report)
+    public function status(Request $request, Report $report)
     {
-        // Policy check
-        $this->authorizeReport($report);
+        $this->authorizeReport($request, $report);
 
         return response()->json([
             'status' => $report->status->value,
@@ -88,16 +85,14 @@ class ReportController extends Controller
     /**
      * Retry processing report yang gagal (tanpa upload ulang)
      */
-    public function retry(Report $report)
+    public function retry(Request $request, Report $report)
     {
-        $this->authorizeReport($report);
+        $this->authorizeReport($request, $report);
 
-        // Hanya bisa retry report yang failed
         if (!$report->isFailed()) {
             return back()->with('error', 'Hanya report yang gagal bisa di-retry.');
         }
 
-        // Reset status dan error
         $report->update([
             'status' => \App\Enums\ReportStatus::Pending,
             'error_message' => null,
@@ -106,7 +101,6 @@ class ReportController extends Controller
             'processing_time_ms' => null,
         ]);
 
-        // Dispatch ulang job
         \App\Jobs\ProcessDataJob::dispatch($report->id);
 
         return redirect()->route('reports.processing', $report->id)
@@ -116,10 +110,9 @@ class ReportController extends Controller
     /**
      * Hapus report dan file terkait
      */
-    public function destroy(Report $report)
+    public function destroy(Request $request, Report $report)
     {
-        // Policy check
-        $this->authorizeReport($report);
+        $this->authorizeReport($request, $report);
 
         // Hapus file dari storage
         if ($report->original_path && Storage::exists($report->original_path)) {
@@ -146,7 +139,6 @@ class ReportController extends Controller
             }
         }
 
-        // Hapus record dari database (cascade delete akan handle relationships)
         $report->delete();
 
         return redirect()->route('reports.index')
@@ -154,13 +146,50 @@ class ReportController extends Controller
     }
 
     /**
-     * Helper method untuk policy check
-     * User hanya bisa akses report miliknya sendiri
+     * Helper: Ambil query reports berdasarkan visitor_token atau user_id
      */
-    private function authorizeReport(Report $report): void
+    private function getReportsQuery(Request $request)
     {
-        if ($report->user_id !== Auth::id()) {
-            abort(403, 'Anda tidak memiliki akses ke report ini.');
+        $user = Auth::user();
+        $visitorToken = $request->cookie('dn_visitor');
+
+        if ($user) {
+            // Admin/logged-in user: tampilkan reports milik user
+            return $user->reports();
         }
+
+        if ($visitorToken) {
+            // Anonymous user: tampilkan reports dengan visitor_token yang cocok
+            return Report::where('visitor_token', $visitorToken);
+        }
+
+        // Tidak ada token, tidak ada report
+        return Report::where('id', -1); // empty query
+    }
+
+    /**
+     * Helper: Cek apakah visitor/user berhak akses report ini
+     */
+    private function authorizeReport(Request $request, Report $report): void
+    {
+        $user = Auth::user();
+        $visitorToken = $request->cookie('dn_visitor');
+
+        // Admin bisa akses semua
+        if ($user && $user->is_admin) {
+            return;
+        }
+
+        // User yang login bisa akses report miliknya
+        if ($user && $report->user_id === $user->id) {
+            return;
+        }
+
+        // Anonymous visitor bisa akses report dengan token yang cocok
+        if ($visitorToken && $report->visitor_token === $visitorToken) {
+            return;
+        }
+
+        abort(403, 'Anda tidak memiliki akses ke report ini.');
     }
 }

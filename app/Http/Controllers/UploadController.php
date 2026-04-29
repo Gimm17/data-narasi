@@ -11,6 +11,7 @@ use Inertia\Inertia;
 
 /**
  * Controller untuk handle upload file CSV/Excel
+ * Dapat diakses tanpa login — tracking via visitor_token cookie
  */
 class UploadController extends Controller
 {
@@ -37,27 +38,30 @@ class UploadController extends Controller
 
     /**
      * Handle file upload dan buat record Report baru
+     * Mendukung anonymous upload via visitor_token
      */
     public function store(UploadFileRequest $request)
     {
         $user = auth()->user();
         $file = $request->file('file');
 
+        // Generate/retrieve visitor token untuk tracking anonymous uploads
+        $visitorToken = $request->cookie('dn_visitor')
+            ?? Str::uuid()->toString();
+
         // Generate unique filename
         $originalFilename = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
         $uniqueFilename = Str::uuid() . '.' . $extension;
 
-        // Simpan file ke storage/app/uploads/{user_id}/
-        $filePath = $file->storeAs(
-            "uploads/{$user->id}",
-            $uniqueFilename,
-            'local'
-        );
+        // Simpan file ke storage — gunakan visitor_token sebagai folder jika anonymous
+        $folder = $user ? "uploads/{$user->id}" : "uploads/guest_{$visitorToken}";
+        $filePath = $file->storeAs($folder, $uniqueFilename, 'local');
 
         // Buat record Report baru
         $report = Report::create([
-            'user_id' => $user->id,
+            'user_id' => $user?->id,
+            'visitor_token' => $visitorToken,
             'title' => $request->getTitle(),
             'original_filename' => $originalFilename,
             'original_path' => $filePath,
@@ -71,8 +75,9 @@ class UploadController extends Controller
         // Dispatch ProcessDataJob untuk diproses di background
         ProcessDataJob::dispatch($report->id);
 
-        // Redirect ke halaman processing
+        // Set visitor token cookie (30 hari) dan redirect
         return redirect()->route('reports.processing', $report->id)
-            ->with('success', 'File berhasil diupload. Sedang diproses...');
+            ->with('success', 'File berhasil diupload. Sedang diproses...')
+            ->cookie('dn_visitor', $visitorToken, 60 * 24 * 30); // 30 hari
     }
 }

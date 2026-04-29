@@ -6,10 +6,13 @@ const props = defineProps<{
     title?: string
 }>()
 
+const isLoggedIn = computed(() => {
+    return !!usePage().props?.auth?.user
+})
+
 // Ambil nama user untuk avatar initials
 const userName = computed(() => {
-    // @ts-ignore - auth user akan di-inject oleh Laravel
-    return usePage().props?.auth?.user?.name || 'User'
+    return usePage().props?.auth?.user?.name || 'Guest'
 })
 
 const isAdmin = computed(() => {
@@ -63,25 +66,35 @@ const userInitials = computed(() => {
 
                         <Link
                             v-if="isAdmin"
+                            :href="route('dashboard')"
+                            class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+                            :class="{ 'text-teal-600': route().current('dashboard') }"
+                        >
+                            Dashboard
+                        </Link>
+
+                        <Link
+                            v-if="isAdmin"
                             :href="route('admin.ai-providers.index')"
                             class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
                             :class="{ 'text-teal-600': route().current('admin.*') }"
                         >
-                            Admin
+                            AI Providers
                         </Link>
                     </div>
 
-                    <!-- User Avatar -->
                     <div class="flex items-center">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-right hidden sm:block">
-                                <div class="text-sm font-medium text-gray-900">{{ userName }}</div>
-                                <div class="text-xs text-gray-500">User</div>
+                        <template v-if="isLoggedIn">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-right hidden sm:block">
+                                    <div class="text-sm font-medium text-gray-900">{{ userName }}</div>
+                                    <div class="text-xs text-gray-500">{{ isAdmin ? 'Admin' : 'User' }}</div>
+                                </div>
+                                <div class="h-10 w-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold">
+                                    {{ userInitials }}
+                                </div>
                             </div>
-                            <div class="h-10 w-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold">
-                                {{ userInitials }}
-                            </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -96,7 +109,7 @@ const userInitials = computed(() => {
         <footer class="bg-white border-t border-gray-200 mt-auto">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="text-center text-sm text-gray-500">
-                    © 2025 DataNarasi — Analisis Data dengan AI
+                    © {{ new Date().getFullYear() }} DataNarasi — Analisis Data dengan AI
                 </div>
             </div>
         </footer>

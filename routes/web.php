@@ -4,43 +4,52 @@ use App\Http\Controllers\Admin\AIProviderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
-| Root
+| Landing Page (Guest-accessible)
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return redirect()->route('upload.create');
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+    ]);
 })->name('home');
 
 /*
 |--------------------------------------------------------------------------
-| Upload Routes
+| Upload Routes (Public — tanpa login)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/upload', [UploadController::class, 'create'])->name('upload.create');
-    Route::post('/upload', [UploadController::class, 'store'])
-        ->middleware('throttle:5,1')
-        ->name('upload.store');
-});
+Route::get('/upload', [UploadController::class, 'create'])->name('upload.create');
+Route::post('/upload', [UploadController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('upload.store');
 
 /*
 |--------------------------------------------------------------------------
-| Report Routes
+| Report Routes (Public — akses via visitor_token cookie)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
-    Route::get('/reports/{report}/processing', [ReportController::class, 'processing'])->name('reports.processing');
-    Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
-    Route::post('/reports/{report}/retry', [ReportController::class, 'retry'])->name('reports.retry');
-    Route::delete('/reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+Route::get('/reports/{report}/processing', [ReportController::class, 'processing'])->name('reports.processing');
+Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
+Route::post('/reports/{report}/retry', [ReportController::class, 'retry'])->name('reports.retry');
+Route::delete('/reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| Dashboard (Admin only)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 /*
@@ -58,7 +67,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
 /*
 |--------------------------------------------------------------------------
-| Profile Routes (Breeze)
+| Profile Routes (Breeze — for admin)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {

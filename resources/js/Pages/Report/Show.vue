@@ -308,6 +308,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                 <NarrativeBox
                     :narrative="report.ai_narrative"
                     :provider-used="report.ai_provider_used"
+                    :report-title="report.title || report.original_filename"
                 />
             </div>
 
