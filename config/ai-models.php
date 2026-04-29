@@ -7,7 +7,13 @@
  *
  * Format: 'provider_slug' => [ ['id' => '...', 'name' => '...', 'desc' => '...'], ... ]
  *
- * NVIDIA models scraped from: https://build.nvidia.com/models (April 2026)
+ * Sources:
+ * - NVIDIA: https://build.nvidia.com/models (April 2026)
+ * - Gemini: https://ai.google.dev/gemini-api/docs/models (April 2026)
+ * - Claude: https://docs.anthropic.com/en/docs/about-claude/models (April 2026)
+ * - Kimi:   https://platform.moonshot.cn (April 2026)
+ * - GLM:    https://open.bigmodel.cn (April 2026)
+ * - MiniMax: https://platform.minimaxi.com (April 2026)
  */
 return [
 
@@ -79,34 +85,110 @@ return [
         ['id' => 'minimaxai/minimax-m2.7', 'name' => 'MiniMax M2.7', 'desc' => 'MiniMax via NVIDIA endpoint'],
     ],
 
+    // ────────────────────────────────────────────────
+    // GEMINI — Source: https://ai.google.dev/gemini-api/docs/models
+    // ────────────────────────────────────────────────
     'gemini' => [
-        ['id' => 'gemini-2.5-flash-preview-04-17', 'name' => 'Gemini 2.5 Flash Preview', 'desc' => 'Newest thinking model'],
-        ['id' => 'gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'desc' => 'Latest generation, fastest'],
-        ['id' => 'gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'desc' => 'Higher quality, longer context'],
-        ['id' => 'gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash', 'desc' => 'Fast, free tier friendly'],
+        // ── Gemini 3 Series (Preview) ──
+        ['id' => 'gemini-3.1-pro-preview', 'name' => 'Gemini 3.1 Pro', 'desc' => 'Advanced intelligence, agentic & vibe coding (Preview)'],
+        ['id' => 'gemini-3-flash-preview', 'name' => 'Gemini 3 Flash', 'desc' => 'Frontier-class at fraction of cost (Preview)'],
+        ['id' => 'gemini-3.1-flash-lite-preview', 'name' => 'Gemini 3.1 Flash-Lite', 'desc' => 'Fastest Gemini 3, ultra-cheap (Preview)'],
+
+        // ── Gemini 2.5 Series (Stable) ──
+        ['id' => 'gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'desc' => 'Best price-performance, reasoning (Stable)'],
+        ['id' => 'gemini-2.5-flash-lite', 'name' => 'Gemini 2.5 Flash-Lite', 'desc' => 'Fastest, most budget-friendly 2.5'],
+        ['id' => 'gemini-2.5-pro', 'name' => 'Gemini 2.5 Pro', 'desc' => 'Most advanced, deep reasoning & coding'],
+        ['id' => 'gemini-2.5-flash-preview-04-17', 'name' => 'Gemini 2.5 Flash Preview', 'desc' => 'Preview thinking model'],
+
+        // ── Gemini 2.0 Series (Deprecated but available) ──
+        ['id' => 'gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'desc' => '2nd gen workhorse, 1M context (Deprecated)'],
+        ['id' => 'gemini-2.0-flash-lite', 'name' => 'Gemini 2.0 Flash-Lite', 'desc' => 'Fastest 2nd gen (Deprecated)'],
+
+        // ── Gemini 1.5 Series (Legacy) ──
+        ['id' => 'gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'desc' => 'Long context, 2M tokens (Legacy)'],
+        ['id' => 'gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash', 'desc' => 'Fast, free tier friendly (Legacy)'],
+
+        // ── Latest Aliases ──
+        ['id' => 'gemini-flash-latest', 'name' => 'Gemini Flash (Latest)', 'desc' => 'Auto-swaps to newest Flash model'],
     ],
 
+    // ────────────────────────────────────────────────
+    // KIMI / MOONSHOT — Source: platform.moonshot.cn
+    // ────────────────────────────────────────────────
     'kimi' => [
+        // ── K2 Series (Current) ──
+        ['id' => 'kimi-k2.6', 'name' => 'Kimi K2.6', 'desc' => 'Most intelligent, native multimodal+agent'],
+        ['id' => 'kimi-k2.5', 'name' => 'Kimi K2.5', 'desc' => 'MoE architecture, agent swarm'],
+
+        // ── Specialized ──
         ['id' => 'kimi-for-coding', 'name' => 'Kimi for Coding', 'desc' => 'Optimized for code & analysis'],
-        ['id' => 'moonshot-v1-128k', 'name' => 'Moonshot v1 128K', 'desc' => 'Long context window'],
+
+        // ── Moonshot V1 (Legacy) ──
+        ['id' => 'moonshot-v1-128k', 'name' => 'Moonshot v1 128K', 'desc' => 'Long context window (Legacy)'],
         ['id' => 'moonshot-v1-32k', 'name' => 'Moonshot v1 32K', 'desc' => 'General purpose, medium context'],
         ['id' => 'moonshot-v1-8k', 'name' => 'Moonshot v1 8K', 'desc' => 'General purpose, short context'],
     ],
 
+    // ────────────────────────────────────────────────
+    // GLM (ZhiPu AI) — Source: open.bigmodel.cn
+    // ────────────────────────────────────────────────
     'glm' => [
+        // ── GLM-5 Series (Latest) ──
+        ['id' => 'glm-5.1', 'name' => 'GLM-5.1', 'desc' => 'Latest flagship, agentic AI'],
+        ['id' => 'glm-4.7', 'name' => 'GLM-4.7', 'desc' => 'Tool calling specialist'],
+
+        // ── GLM-4 Series ──
         ['id' => 'glm-4-plus', 'name' => 'GLM-4 Plus', 'desc' => 'Premium tier, highest quality'],
-        ['id' => 'glm-4', 'name' => 'GLM-4', 'desc' => 'Full model, better quality'],
+        ['id' => 'glm-4', 'name' => 'GLM-4', 'desc' => 'Full model, good quality'],
         ['id' => 'glm-4-flash', 'name' => 'GLM-4 Flash', 'desc' => 'Free tier, fast response'],
+        ['id' => 'glm-4-flashx', 'name' => 'GLM-4 FlashX', 'desc' => 'Ultra-fast inference variant'],
+        ['id' => 'glm-4-airx', 'name' => 'GLM-4 AirX', 'desc' => 'Balanced speed/quality'],
+        ['id' => 'glm-4-air', 'name' => 'GLM-4 Air', 'desc' => 'Lightweight, efficient'],
+        ['id' => 'glm-4-long', 'name' => 'GLM-4 Long', 'desc' => 'Extended context, 1M tokens'],
+        ['id' => 'glm-4-alltools', 'name' => 'GLM-4 AllTools', 'desc' => 'Code interpreter + web search'],
+
+        // ── GLM-4V (Vision) ──
+        ['id' => 'glm-4v', 'name' => 'GLM-4V', 'desc' => 'Vision understanding model'],
+        ['id' => 'glm-4v-plus', 'name' => 'GLM-4V Plus', 'desc' => 'Enhanced vision model'],
+        ['id' => 'glm-4v-flash', 'name' => 'GLM-4V Flash', 'desc' => 'Fast vision model (Free)'],
+
+        // ── Legacy ──
+        ['id' => 'glm-3-turbo', 'name' => 'GLM-3 Turbo', 'desc' => 'Previous gen, budget-friendly'],
     ],
 
+    // ────────────────────────────────────────────────
+    // MINIMAX — Source: platform.minimaxi.com
+    // ────────────────────────────────────────────────
     'minimax' => [
-        ['id' => 'MiniMax-M2.5', 'name' => 'MiniMax M2.5', 'desc' => 'Latest model, strong multilingual'],
-        ['id' => 'MiniMax-Text-01', 'name' => 'MiniMax Text 01', 'desc' => 'Text generation model'],
+        // ── M2 Series (Current) ──
+        ['id' => 'MiniMax-M2.7', 'name' => 'MiniMax M2.7', 'desc' => 'Latest flagship, strongest quality'],
+        ['id' => 'MiniMax-M2.7-highspeed', 'name' => 'MiniMax M2.7 HighSpeed', 'desc' => 'Fast variant of M2.7'],
+        ['id' => 'MiniMax-M2.5', 'name' => 'MiniMax M2.5', 'desc' => 'Strong multilingual model'],
+        ['id' => 'MiniMax-M2.5-highspeed', 'name' => 'MiniMax M2.5 HighSpeed', 'desc' => 'Fast variant of M2.5'],
+        ['id' => 'MiniMax-M2.1', 'name' => 'MiniMax M2.1', 'desc' => 'Previous gen, reliable'],
+        ['id' => 'MiniMax-M2.1-highspeed', 'name' => 'MiniMax M2.1 HighSpeed', 'desc' => 'Fast variant of M2.1'],
+        ['id' => 'MiniMax-M2', 'name' => 'MiniMax M2', 'desc' => 'Base M2 model'],
+
+        // ── Specialized ──
+        ['id' => 'M2-her', 'name' => 'M2 Her', 'desc' => 'Roleplay/character specialized'],
+        ['id' => 'MiniMax-Text-01', 'name' => 'MiniMax Text 01', 'desc' => 'Legacy text generation'],
     ],
 
+    // ────────────────────────────────────────────────
+    // CLAUDE (Anthropic) — Source: docs.anthropic.com
+    // ────────────────────────────────────────────────
     'claude' => [
-        ['id' => 'claude-sonnet-4-20250514', 'name' => 'Claude Sonnet 4', 'desc' => 'Latest balanced model'],
-        ['id' => 'claude-3-5-sonnet-20241022', 'name' => 'Claude 3.5 Sonnet', 'desc' => 'Previous gen, reliable'],
+        // ── Claude 4 Series (Latest) ──
+        ['id' => 'claude-opus-4-20250514', 'name' => 'Claude Opus 4.7', 'desc' => 'Most capable, agentic coding champion'],
+        ['id' => 'claude-sonnet-4-20250514', 'name' => 'Claude Sonnet 4', 'desc' => 'Latest balanced, great for coding'],
+
+        // ── Claude 3.5 Series ──
+        ['id' => 'claude-3-5-sonnet-20241022', 'name' => 'Claude 3.5 Sonnet', 'desc' => 'Previous gen, proven reliable'],
+        ['id' => 'claude-3-5-haiku-20241022', 'name' => 'Claude 3.5 Haiku', 'desc' => 'Fast, efficient, cheapest 3.5'],
+
+        // ── Claude 3 Series ──
+        ['id' => 'claude-3-opus-20240229', 'name' => 'Claude 3 Opus', 'desc' => 'Previous flagship, complex tasks'],
+        ['id' => 'claude-3-sonnet-20240229', 'name' => 'Claude 3 Sonnet', 'desc' => 'Previous mid-tier'],
         ['id' => 'claude-3-haiku-20240307', 'name' => 'Claude 3 Haiku', 'desc' => 'Cheapest, fastest Claude'],
     ],
 
