@@ -202,6 +202,40 @@ const getTodayErrorRate = (provider: any) => {
     if (provider.today_calls === 0) return '0%'
     return `${((provider.today_errors / provider.today_calls) * 100).toFixed(0)}%`
 }
+
+// ── API Key Health Check ──
+const healthCheckResults = reactive<Record<number, any>>({})
+const checkingProviders = reactive<Record<number, boolean>>({})
+const showHealthModal = ref(false)
+const healthModalData = ref<any>(null)
+
+const checkApiKey = async (provider: any) => {
+    checkingProviders[provider.id] = true
+    try {
+        const response = await axios.post(
+            route('admin.ai-providers.check-key', provider.id)
+        )
+        healthCheckResults[provider.id] = response.data
+        healthModalData.value = { ...response.data, providerName: provider.name, providerSlug: provider.slug }
+        showHealthModal.value = true
+    } catch (error: any) {
+        healthCheckResults[provider.id] = {
+            valid: false,
+            error: error.response?.data?.error || 'Gagal mengecek API key',
+            checked_at: new Date().toISOString()
+        }
+        healthModalData.value = { ...healthCheckResults[provider.id], providerName: provider.name, providerSlug: provider.slug }
+        showHealthModal.value = true
+    } finally {
+        checkingProviders[provider.id] = false
+    }
+}
+
+const getHealthBadge = (providerId: number) => {
+    const result = healthCheckResults[providerId]
+    if (!result) return null
+    return result.valid
+}
 </script>
 
 <template>
@@ -332,6 +366,34 @@ const getTodayErrorRate = (provider: any) => {
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
+                                        <!-- Health check badge -->
+                                        <span
+                                            v-if="getHealthBadge(provider.id) === true"
+                                            class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"
+                                            title="API Key valid"
+                                        ></span>
+                                        <span
+                                            v-else-if="getHealthBadge(provider.id) === false"
+                                            class="w-2 h-2 rounded-full bg-red-400 flex-shrink-0"
+                                            title="API Key invalid"
+                                        ></span>
+
+                                        <!-- Check API Key button -->
+                                        <button
+                                            @click="checkApiKey(provider)"
+                                            :disabled="checkingProviders[provider.id]"
+                                            class="text-gray-400 hover:text-blue-600 transition-colors p-1 disabled:opacity-50"
+                                            title="Cek API Key"
+                                        >
+                                            <svg v-if="!checkingProviders[provider.id]" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                            <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                            </svg>
+                                        </button>
+
                                         <button
                                             @click="openEditModal(provider)"
                                             class="text-gray-400 hover:text-gray-700 transition-colors p-1"
@@ -547,6 +609,144 @@ const getTodayErrorRate = (provider: any) => {
                             class="text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 px-4 py-1.5 rounded-lg transition-colors"
                         >
                             {{ isSaving ? 'Menyimpan...' : 'Simpan' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- API Key Health Check Result Modal -->
+        <Teleport to="body">
+            <div v-if="showHealthModal && healthModalData" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showHealthModal = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                    <!-- Header -->
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                                :class="healthModalData.valid ? 'bg-emerald-500' : 'bg-red-500'"
+                            >
+                                <svg v-if="healthModalData.valid" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900">{{ healthModalData.providerName }}</h3>
+                                <p class="text-xs" :class="healthModalData.valid ? 'text-emerald-600' : 'text-red-600'">
+                                    {{ healthModalData.valid ? 'API Key Valid ✓' : 'API Key Invalid ✗' }}
+                                </p>
+                            </div>
+                        </div>
+                        <button @click="showHealthModal = false" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="px-5 py-4 space-y-3">
+                        <!-- Error Message -->
+                        <div v-if="healthModalData.error" class="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                            <div class="text-[11px] text-red-400 font-medium uppercase tracking-wide mb-1">Error</div>
+                            <p class="text-xs text-red-700">{{ healthModalData.error }}</p>
+                        </div>
+
+                        <!-- Models Count -->
+                        <div v-if="healthModalData.models_count !== null" class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-xs text-gray-500">Model Tersedia</span>
+                            <span class="text-sm font-semibold text-gray-900 tabular-nums">{{ healthModalData.models_count }}</span>
+                        </div>
+
+                        <!-- Tier -->
+                        <div v-if="healthModalData.tier" class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-xs text-gray-500">Tipe Akun</span>
+                            <span
+                                class="text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full"
+                                :class="{
+                                    'bg-amber-50 text-amber-700': healthModalData.tier === 'premium',
+                                    'bg-gray-100 text-gray-600': healthModalData.tier === 'free',
+                                    'bg-blue-50 text-blue-600': healthModalData.tier === 'coding_plan',
+                                    'bg-gray-50 text-gray-500': healthModalData.tier === 'standard' || healthModalData.tier === 'unknown'
+                                }"
+                            >
+                                {{ healthModalData.tier }}
+                            </span>
+                        </div>
+
+                        <!-- Balance (Kimi) -->
+                        <div v-if="healthModalData.balance !== null && healthModalData.balance !== undefined" class="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                            <div class="text-[11px] text-emerald-500 font-medium uppercase tracking-wide mb-2">💰 Balance</div>
+                            <div class="text-xl font-bold text-emerald-700 tabular-nums mb-2">
+                                ¥{{ typeof healthModalData.balance === 'number' ? healthModalData.balance.toFixed(2) : healthModalData.balance }}
+                            </div>
+                            <div v-if="healthModalData.balance_detail" class="grid grid-cols-2 gap-2">
+                                <div class="bg-white/60 rounded-lg px-3 py-1.5">
+                                    <div class="text-[10px] text-gray-400">Voucher</div>
+                                    <div class="text-xs font-semibold text-gray-700 tabular-nums">
+                                        ¥{{ typeof healthModalData.balance_detail.voucher === 'number' ? healthModalData.balance_detail.voucher.toFixed(2) : (healthModalData.balance_detail.voucher ?? '-') }}
+                                    </div>
+                                </div>
+                                <div class="bg-white/60 rounded-lg px-3 py-1.5">
+                                    <div class="text-[10px] text-gray-400">Cash</div>
+                                    <div class="text-xs font-semibold text-gray-700 tabular-nums">
+                                        ¥{{ typeof healthModalData.balance_detail.cash === 'number' ? healthModalData.balance_detail.cash.toFixed(2) : (healthModalData.balance_detail.cash ?? '-') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rate Limits (Claude) -->
+                        <div v-if="healthModalData.rate_limit && Object.keys(healthModalData.rate_limit).length > 0" class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                            <div class="text-[11px] text-blue-500 font-medium uppercase tracking-wide mb-2">⚡ Rate Limits</div>
+                            <div class="space-y-1.5">
+                                <div v-if="healthModalData.rate_limit.requests_remaining !== undefined" class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-600">Requests</span>
+                                    <span class="text-xs font-semibold text-gray-800 tabular-nums">
+                                        {{ healthModalData.rate_limit.requests_remaining?.toLocaleString() }} / {{ healthModalData.rate_limit.requests_limit?.toLocaleString() }}
+                                    </span>
+                                </div>
+                                <div v-if="healthModalData.rate_limit.input_tokens_remaining !== undefined" class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-600">Input Tokens</span>
+                                    <span class="text-xs font-semibold text-gray-800 tabular-nums">
+                                        {{ healthModalData.rate_limit.input_tokens_remaining?.toLocaleString() }} / {{ healthModalData.rate_limit.input_tokens_limit?.toLocaleString() }}
+                                    </span>
+                                </div>
+                                <div v-if="healthModalData.rate_limit.output_tokens_remaining !== undefined" class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-600">Output Tokens</span>
+                                    <span class="text-xs font-semibold text-gray-800 tabular-nums">
+                                        {{ healthModalData.rate_limit.output_tokens_remaining?.toLocaleString() }} / {{ healthModalData.rate_limit.output_tokens_limit?.toLocaleString() }}
+                                    </span>
+                                </div>
+                                <div v-if="healthModalData.rate_limit.status === 'rate_limited'" class="text-xs text-amber-600 font-medium">
+                                    ⚠️ Sedang rate limited
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Response Time -->
+                        <div v-if="healthModalData.response_ms" class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-xs text-gray-500">Response Time</span>
+                            <span class="text-xs font-semibold text-gray-700 tabular-nums">{{ healthModalData.response_ms }}ms</span>
+                        </div>
+
+                        <!-- Checked At -->
+                        <div v-if="healthModalData.checked_at" class="flex items-center justify-between py-2">
+                            <span class="text-xs text-gray-500">Dicek pada</span>
+                            <span class="text-[11px] text-gray-400">{{ new Date(healthModalData.checked_at).toLocaleTimeString('id-ID') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-5 py-3 border-t border-gray-100 flex justify-end">
+                        <button
+                            @click="showHealthModal = false"
+                            class="text-xs font-medium text-gray-500 hover:text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Tutup
                         </button>
                     </div>
                 </div>

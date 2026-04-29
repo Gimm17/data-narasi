@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::put('/ai-providers/{provider}', [AIProviderController::class, 'updateProvider'])->name('ai-providers.update');
     Route::post('/ai-providers/priority', [AIProviderController::class, 'updatePriority'])->name('ai-providers.priority');
     Route::post('/ai-providers/{provider}/reset-counters', [AIProviderController::class, 'resetCounters'])->name('ai-providers.reset');
+    Route::post('/ai-providers/{provider}/check-key', [AIProviderController::class, 'checkApiKey'])->name('ai-providers.check-key');
 });
 
 /*

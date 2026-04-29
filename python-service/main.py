@@ -37,6 +37,7 @@ from analyzer import DataAnalyzer
 from chart_generator import ChartGenerator
 from prompt_builder import PromptBuilder
 from ai_provider import AIProviderManager
+from health_checker import APIHealthChecker
 
 # Configure logging
 logging.basicConfig(
@@ -87,12 +88,19 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class CheckAPIKeyRequest(BaseModel):
+    slug: str
+    api_key: str
+    model_id: Optional[str] = None
+
+
 # Initialize components
 cleaner = DataCleaner()
 analyzer = DataAnalyzer()
 chart_gen = ChartGenerator()
 prompt_builder = PromptBuilder()
 ai_manager = AIProviderManager()
+health_checker = APIHealthChecker()
 
 
 def _generate_hmac_signature(payload: str, secret: str) -> str:
@@ -226,6 +234,23 @@ async def process_data(request: ProcessRequest, background_tasks: BackgroundTask
         "message": "Processing started in background",
         "report_id": request.report_id
     }
+
+
+@app.post("/check-api-key")
+async def check_api_key(request: CheckAPIKeyRequest):
+    """
+    Check API key health: validitas, balance, rate limits.
+    Digunakan oleh admin panel untuk monitoring provider status.
+    """
+    logger.info(f"Checking API key for provider: {request.slug}")
+
+    result = health_checker.check(
+        slug=request.slug,
+        api_key=request.api_key,
+        model_id=request.model_id
+    )
+
+    return result
 
 
 def _process_report_background(request: ProcessRequest):

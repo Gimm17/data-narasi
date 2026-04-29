@@ -7,6 +7,8 @@ use App\Models\AIProvider;
 use App\Models\AIUsageLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -213,6 +215,55 @@ class AIProviderController extends Controller
         }
 
         file_put_contents($envPath, $envContent);
+    }
+
+    /**
+     * Check API key health: validitas, balance, rate limits
+     * Proxy ke Python service /check-api-key
+     */
+    public function checkApiKey(AIProvider $provider)
+    {
+        try {
+            // Baca API key dari .env
+            $apiKey = env($provider->api_key_env);
+
+            if (empty($apiKey)) {
+                return response()->json([
+                    'valid' => false,
+                    'error' => "API key belum diset. Tambahkan {$provider->api_key_env} di file .env",
+                    'checked_at' => now()->toISOString(),
+                ]);
+            }
+
+            // Kirim request ke Python service
+            $pythonUrl = config('services.python.url', 'http://localhost:8001');
+
+            $response = Http::timeout(15)
+                ->post("{$pythonUrl}/check-api-key", [
+                    'slug' => $provider->slug,
+                    'api_key' => $apiKey,
+                    'model_id' => $provider->model_id,
+                ]);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json([
+                'valid' => false,
+                'error' => 'Python service error: ' . $response->status(),
+                'checked_at' => now()->toISOString(),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("API key check failed for {$provider->name}: {$e->getMessage()}");
+
+            return response()->json([
+                'valid' => false,
+                'error' => 'Tidak bisa terhubung ke Python service: ' . $e->getMessage(),
+                'checked_at' => now()->toISOString(),
+            ]);
+        }
     }
 }
 
