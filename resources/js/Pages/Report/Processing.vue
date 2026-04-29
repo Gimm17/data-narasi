@@ -126,7 +126,7 @@ const updateSteps = (data: any) => {
 
 // Retry upload
 const retry = () => {
-    router.visit(route('upload.create'))
+    router.post(route('reports.retry', props.report.id))
 }
 
 // Komputed

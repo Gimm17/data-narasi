@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -9,7 +9,11 @@ const props = defineProps<{
 // Ambil nama user untuk avatar initials
 const userName = computed(() => {
     // @ts-ignore - auth user akan di-inject oleh Laravel
-    return props.$page?.props?.auth?.user?.name || 'User'
+    return usePage().props?.auth?.user?.name || 'User'
+})
+
+const isAdmin = computed(() => {
+    return usePage().props?.auth?.user?.is_admin || false
 })
 
 const userInitials = computed(() => {
@@ -58,6 +62,7 @@ const userInitials = computed(() => {
                         </Link>
 
                         <Link
+                            v-if="isAdmin"
                             :href="route('admin.ai-providers.index')"
                             class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
                             :class="{ 'text-teal-600': route().current('admin.*') }"

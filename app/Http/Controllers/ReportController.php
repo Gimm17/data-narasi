@@ -86,6 +86,34 @@ class ReportController extends Controller
     }
 
     /**
+     * Retry processing report yang gagal (tanpa upload ulang)
+     */
+    public function retry(Report $report)
+    {
+        $this->authorizeReport($report);
+
+        // Hanya bisa retry report yang failed
+        if (!$report->isFailed()) {
+            return back()->with('error', 'Hanya report yang gagal bisa di-retry.');
+        }
+
+        // Reset status dan error
+        $report->update([
+            'status' => \App\Enums\ReportStatus::Pending,
+            'error_message' => null,
+            'ai_narrative' => null,
+            'ai_provider_used' => null,
+            'processing_time_ms' => null,
+        ]);
+
+        // Dispatch ulang job
+        \App\Jobs\ProcessDataJob::dispatch($report->id);
+
+        return redirect()->route('reports.processing', $report->id)
+            ->with('success', 'Report sedang diproses ulang.');
+    }
+
+    /**
      * Hapus report dan file terkait
      */
     public function destroy(Report $report)

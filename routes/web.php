@@ -24,7 +24,9 @@ Route::get('/', function () {
 */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/upload', [UploadController::class, 'create'])->name('upload.create');
-    Route::post('/upload', [UploadController::class, 'store'])->name('upload.store');
+    Route::post('/upload', [UploadController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('upload.store');
 });
 
 /*
@@ -37,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/processing', [ReportController::class, 'processing'])->name('reports.processing');
     Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
+    Route::post('/reports/{report}/retry', [ReportController::class, 'retry'])->name('reports.retry');
     Route::delete('/reports/{report}', [ReportController::class, 'destroy'])->name('reports.destroy');
 });
 

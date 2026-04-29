@@ -23,6 +23,7 @@ class AIProvider extends Model
      */
     protected $fillable = [
         'name',
+        'slug',
         'model_id',
         'base_url',
         'api_key_env',

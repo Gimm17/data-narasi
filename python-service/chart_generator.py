@@ -82,18 +82,19 @@ class ChartGenerator:
             return []
 
     def _is_date_column(self, df: pd.DataFrame, col: str) -> bool:
-        """Cek apakah kolom adalah tanggal"""
+        """Cek apakah kolom adalah tanggal (tanpa mengubah data asli)"""
         try:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
-            return df[col].notna().sum() > len(df) * 0.8  # 80% values berhasil convert
+            converted = pd.to_datetime(df[col], errors='coerce')
+            return converted.notna().sum() > len(df) * 0.8  # 80% values berhasil convert
         except:
             return False
 
     def _create_line_chart(self, df: pd.DataFrame, date_col: str, value_col: str, output_folder: Path) -> str:
         """Buat line chart untuk tren"""
         try:
-            df_sorted = df.sort_values(date_col)
-            df_sorted[date_col] = pd.to_datetime(df_sorted[date_col])
+            df_work = df.copy()
+            df_work[date_col] = pd.to_datetime(df_work[date_col], errors='coerce')
+            df_sorted = df_work.dropna(subset=[date_col]).sort_values(date_col)
 
             fig, ax = plt.subplots(figsize=(12, 6))
 

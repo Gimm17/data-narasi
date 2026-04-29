@@ -56,24 +56,10 @@ class PythonServiceClient
         $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rawPath);
 
         // Ambil urutan provider dari database (admin panel) — sorted by priority
-        // Gunakan api_key_env sebagai basis mapping karena lebih reliable dari display name
-        $providerOrder = \App\Models\AIProvider::where('is_enabled', true)
+        // Gunakan kolom slug langsung dari DB — tidak perlu mapping hardcoded
+        $mappedOrder = \App\Models\AIProvider::where('is_enabled', true)
             ->orderBy('priority', 'asc')
-            ->pluck('api_key_env')
-            ->toArray();
-
-        // Map api_key_env → Python slug
-        $envToSlug = [
-            'GEMINI_API_KEY' => 'gemini',
-            'KIMI_API_KEY' => 'kimi',
-            'GLM_API_KEY' => 'glm',
-            'NVIDIA_API_KEY' => 'nvidia',
-            'MINIMAX_API_KEY' => 'minimax',
-            'CLAUDE_API_KEY' => 'claude',
-        ];
-
-        $mappedOrder = collect($providerOrder)
-            ->map(fn ($env) => $envToSlug[$env] ?? null)
+            ->pluck('slug')
             ->filter()
             ->unique()
             ->values()

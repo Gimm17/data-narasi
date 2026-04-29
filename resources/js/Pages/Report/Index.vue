@@ -181,7 +181,7 @@ const goToPage = (page: number) => {
                             <!-- Retry Button (for failed) -->
                             <button
                                 v-else-if="report.status === 'failed'"
-                                @click="router.visit(route('reports.processing', report.id))"
+                                @click="router.post(route('reports.retry', report.id))"
                                 class="px-3 py-1.5 text-sm font-medium text-orange-600 hover:text-orange-700 border border-orange-600 rounded hover:bg-orange-50 transition-colors"
                             >
                                 Retry

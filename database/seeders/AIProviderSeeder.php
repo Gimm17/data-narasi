@@ -20,6 +20,7 @@ class AIProviderSeeder extends Seeder
         $providers = [
             [
                 'name' => 'Gemini 1.5 Flash',
+                'slug' => 'gemini',
                 'model_id' => 'gemini-1.5-flash',
                 'base_url' => 'https://generativelanguage.googleapis.com',
                 'api_key_env' => 'GEMINI_API_KEY',
@@ -30,6 +31,7 @@ class AIProviderSeeder extends Seeder
             ],
             [
                 'name' => 'Kimi',
+                'slug' => 'kimi',
                 'model_id' => 'kimi-for-coding',
                 'base_url' => 'https://api.kimi.com/coding/v1',
                 'api_key_env' => 'KIMI_API_KEY',
@@ -40,6 +42,7 @@ class AIProviderSeeder extends Seeder
             ],
             [
                 'name' => 'GLM-4 Flash',
+                'slug' => 'glm',
                 'model_id' => 'glm-4-flash',
                 'base_url' => 'https://open.bigmodel.cn/api/paas/v4',
                 'api_key_env' => 'GLM_API_KEY',
@@ -50,6 +53,7 @@ class AIProviderSeeder extends Seeder
             ],
             [
                 'name' => 'NVIDIA NIM',
+                'slug' => 'nvidia',
                 'model_id' => 'meta/llama-3.1-8b-instruct',
                 'base_url' => 'https://integrate.api.nvidia.com/v1',
                 'api_key_env' => 'NVIDIA_API_KEY',
@@ -60,6 +64,7 @@ class AIProviderSeeder extends Seeder
             ],
             [
                 'name' => 'MiniMax',
+                'slug' => 'minimax',
                 'model_id' => 'MiniMax-M2.5',
                 'base_url' => 'https://api.minimax.io/v1',
                 'api_key_env' => 'MINIMAX_API_KEY',
@@ -70,6 +75,7 @@ class AIProviderSeeder extends Seeder
             ],
             [
                 'name' => 'Claude (Anthropic)',
+                'slug' => 'claude',
                 'model_id' => 'claude-sonnet-4-20250514',
                 'base_url' => 'https://api.anthropic.com',
                 'api_key_env' => 'CLAUDE_API_KEY',
