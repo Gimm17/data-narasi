@@ -75,6 +75,29 @@
   - New: `return $this->is_enabled && !empty($this->api_key_env)`.
   - `getApiKey()` returns `'[configured-in-python-service]'` as fallback when env is empty but provider is configured.
 
+### 📝 Markdown Rendering di Narasi AI
+
+- **NarrativeBox.vue** — Narasi AI sekarang render markdown formatting:
+  - Sebelumnya: `{{ formattedNarrative }}` (plain text) → `**bold**` tampil apa adanya.
+  - Sesudah: `v-html="formattedNarrative"` + custom `renderMarkdown()` parser.
+  - Support: **bold**, *italic*, ***bold+italic***, ~~strikethrough~~, `# heading`, `- list`, `1. ordered list`, `` `code` ``, `---` horizontal rule.
+  - Print window juga diupdate dengan styles untuk semua formatting di atas.
+  - Parser built-in (tanpa library tambahan) — lightweight & zero dependencies.
+
+### 📊 Chart Image Base64 Transfer `🚂`
+
+- **Problem:** Chart gambar 404 — Python simpan di container sendiri, Laravel tidak bisa akses.
+- **Solution:** Chart di-encode base64, dikirim via callback, Laravel decode & simpan ke `storage/app/public/`.
+- `python-service/chart_generator.py`:
+  - Chart disimpan ke `python-service/storage/charts/{report_id}/`.
+  - Return type berubah: `List[str]` → `List[Dict]` (`{path, data, filename}`).
+  - Setiap file PNG di-read & encode base64.
+- `python-service/main.py`:
+  - Callback payload kirim `chart_paths` (relative) + `chart_images` (base64 data).
+- `ReportCallbackController.php`:
+  - Terima `chart_images`, decode base64, simpan ke `Storage::disk('public')`.
+  - `chart_paths` di-rebuild dari file yang berhasil disimpan.
+
 ### Modified Files
 | File | Change | Railway? |
 |------|--------|----------|
@@ -91,12 +114,14 @@
 | `app/Providers/AppServiceProvider.php` | Force HTTPS in production | 🚂 |
 | `bootstrap/app.php` | TrustProxies at: '*' | 🚂 |
 | `app/Services/PythonServiceClient.php` | Base64 file transfer | 🚂 |
-| `python-service/main.py` | Receive base64 + save locally | 🚂 |
-| `app/Http/Controllers/Api/ReportCallbackController.php` | FK fix + slug lookup | |
+| `python-service/main.py` | Receive base64 + chart_images in callback | 🚂 |
+| `python-service/chart_generator.py` | Base64 chart export + local storage | 🚂 |
+| `app/Http/Controllers/Api/ReportCallbackController.php` | FK fix + slug lookup + decode chart images | 🚂 |
 | `app/Models/AIProvider.php` | isReady() microservice-aware | 🚂 |
 | `database/seeders/DatabaseSeeder.php` | Admin user seeder | |
-| `resources/js/Pages/Auth/Login.vue` | Full redesign | |
-| `resources/js/Layouts/AppLayout.vue` | Profile dropdown + logout | |
+| `resources/js/Pages/Auth/Login.vue` | Full redesign | 🎨 |
+| `resources/js/Layouts/AppLayout.vue` | Profile dropdown + logout | 🎨 |
+| `resources/js/Components/NarrativeBox.vue` | Markdown rendering (v-html) | 🎨 |
 
 ---
 
