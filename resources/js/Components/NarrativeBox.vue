@@ -10,14 +10,72 @@ const props = defineProps<{
 
 const copied = ref(false)
 
-// Format narrative with proper line breaks
-const formattedNarrative = computed(() => {
-    if (!props.narrative) return ''
+// Parse markdown to HTML (lightweight — no external dependency)
+const renderMarkdown = (text: string): string => {
+    if (!text) return ''
 
-    return props.narrative
-        .split('\n')
-        .filter((line) => line.trim() !== '')
-        .join('\n\n')
+    let html = text
+        // Escape HTML entities first
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
+    // Headings: ### heading → <h3>
+    html = html.replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-gray-900 mt-5 mb-2">$1</h3>')
+    html = html.replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-gray-900 mt-6 mb-2">$1</h2>')
+    html = html.replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold text-gray-900 mt-6 mb-3">$1</h1>')
+
+    // Bold + Italic: ***text*** or ___text___
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>')
+
+    // Bold: **text** or __text__
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+    html = html.replace(/__(.+?)__/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+
+    // Italic: *text* or _text_
+    html = html.replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
+    html = html.replace(/_(.+?)_/g, '<em class="italic">$1</em>')
+
+    // Strikethrough: ~~text~~
+    html = html.replace(/~~(.+?)~~/g, '<del class="line-through text-gray-400">$1</del>')
+
+    // Unordered lists: - item or * item
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li class="ml-4 pl-1 list-disc">$1</li>')
+
+    // Ordered lists: 1. item
+    html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 pl-1 list-decimal">$1</li>')
+
+    // Wrap consecutive <li> in <ul>/<ol>
+    html = html.replace(/((?:<li class="ml-4 pl-1 list-disc">.*<\/li>\n?)+)/g, '<ul class="my-2 space-y-1">$1</ul>')
+    html = html.replace(/((?:<li class="ml-4 pl-1 list-decimal">.*<\/li>\n?)+)/g, '<ol class="my-2 space-y-1">$1</ol>')
+
+    // Horizontal rule: --- or ***
+    html = html.replace(/^(---|\*\*\*)$/gm, '<hr class="my-4 border-gray-200">')
+
+    // Inline code: `code`
+    html = html.replace(/`(.+?)`/g, '<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
+
+    // Line breaks: double newline → paragraph, single newline → <br>
+    html = html
+        .split('\n\n')
+        .map(block => {
+            block = block.trim()
+            if (!block) return ''
+            // Don't wrap headings, lists, or hr in <p>
+            if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<hr')) {
+                return block
+            }
+            return `<p class="mb-3">${block.replace(/\n/g, '<br>')}</p>`
+        })
+        .filter(b => b)
+        .join('\n')
+
+    return html
+}
+
+const formattedNarrative = computed(() => {
+    return renderMarkdown(props.narrative)
 })
 
 const hasNarrative = computed(() => {
@@ -71,7 +129,16 @@ const printNarrative = () => {
                 body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 24px; color: #1e293b; line-height: 1.7; }
                 h1 { font-size: 18px; color: #0d9488; margin-bottom: 4px; }
                 .meta { font-size: 12px; color: #94a3b8; margin-bottom: 24px; }
-                .content { font-size: 14px; white-space: pre-line; }
+                .content { font-size: 14px; }
+                .content h1, .content h2, .content h3 { color: #0f172a; margin-top: 20px; margin-bottom: 8px; }
+                .content h2 { font-size: 16px; }
+                .content h3 { font-size: 15px; }
+                .content strong { font-weight: 600; color: #0f172a; }
+                .content em { font-style: italic; }
+                .content p { margin-bottom: 12px; }
+                .content ul, .content ol { margin: 8px 0; padding-left: 24px; }
+                .content li { margin-bottom: 4px; }
+                .content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
                 hr { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
                 .footer { font-size: 11px; color: #cbd5e1; text-align: center; }
             </style>
@@ -187,9 +254,7 @@ const wordCount = computed(() => {
 
         <!-- Narrative Content -->
         <div v-else-if="hasNarrative" class="px-5 py-5">
-            <div class="text-sm text-gray-700 leading-[1.8] whitespace-pre-line">
-                {{ formattedNarrative }}
-            </div>
+            <div class="narrative-content text-sm text-gray-700 leading-[1.8]" v-html="formattedNarrative"></div>
         </div>
 
         <!-- Empty State -->
