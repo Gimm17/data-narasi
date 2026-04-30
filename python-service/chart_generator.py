@@ -27,7 +27,7 @@ class ChartGenerator:
         matplotlib.rcParams['figure.figsize'] = (10, 6)
         matplotlib.rcParams['font.size'] = 10
 
-    def run(self, df: pd.DataFrame, stats: Dict[str, Any], report_id: int) -> List[str]:
+    def run(self, df: pd.DataFrame, stats: Dict[str, Any], report_id: int) -> List[Dict[str, str]]:
         """
         Generate charts dari DataFrame
 
@@ -37,20 +37,15 @@ class ChartGenerator:
             report_id: ID report untuk penamaan folder
 
         Returns:
-            List of chart file paths
+            List of dicts with 'path' (relative) and 'data' (base64)
         """
         logger.info("Starting chart generation...")
 
         chart_paths = []
 
         try:
-            # Buat folder untuk charts — simpan di Laravel storage/app/public/charts
-            laravel_base = os.environ.get('LARAVEL_BASE_PATH', '')
-            if laravel_base:
-                chart_folder = Path(laravel_base) / 'storage' / 'app' / 'public' / 'charts' / str(report_id)
-            else:
-                # Fallback: asumsi Python service di subfolder project Laravel
-                chart_folder = Path(__file__).parent.parent / 'storage' / 'app' / 'public' / 'charts' / str(report_id)
+            # Simpan chart di lokal Python container
+            chart_folder = Path(__file__).parent / 'storage' / 'charts' / str(report_id)
             chart_folder.mkdir(parents=True, exist_ok=True)
 
             # Chart 1: Line chart untuk tren (jika ada kolom tanggal)
@@ -81,17 +76,27 @@ class ChartGenerator:
 
             logger.info(f"✅ Generated {len(chart_paths)} charts")
 
-            # Normalize paths ke relative (charts/{id}/file.png) untuk Laravel Storage::url()
-            relative_paths = []
+            # Build result: relative path + base64 encoded data
+            import base64
+            results = []
             for p in chart_paths:
-                p_str = str(p).replace('\\', '/')
-                idx = p_str.find('charts/')
-                if idx >= 0:
-                    relative_paths.append(p_str[idx:])
-                else:
-                    relative_paths.append(p_str)
+                p_path = Path(p)
+                relative = f"charts/{report_id}/{p_path.name}"
 
-            return relative_paths
+                # Read file and encode to base64
+                try:
+                    with open(p, 'rb') as f:
+                        b64_data = base64.b64encode(f.read()).decode('utf-8')
+                    results.append({
+                        'path': relative,
+                        'data': b64_data,
+                        'filename': p_path.name,
+                    })
+                except Exception as e:
+                    logger.warning(f"Could not read chart file {p}: {e}")
+                    results.append({'path': relative, 'data': None, 'filename': p_path.name})
+
+            return results
 
         except Exception as e:
             logger.error(f"Error generating charts: {str(e)}")

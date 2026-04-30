@@ -53,6 +53,10 @@ class ReportCallbackController extends Controller
                 'summary_stats' => 'nullable|array',
                 'cleaning_log' => 'nullable|array',
                 'chart_paths' => 'nullable|array',
+                'chart_images' => 'nullable|array',
+                'chart_images.*.path' => 'nullable|string',
+                'chart_images.*.data' => 'nullable|string',
+                'chart_images.*.filename' => 'nullable|string',
                 'clean_path' => 'nullable|string',
                 'clean_rows' => 'nullable|integer',
                 'ai_provider_used' => 'nullable|string',
@@ -62,12 +66,38 @@ class ReportCallbackController extends Controller
                 'error_message' => 'nullable|string',
             ]);
 
+            // Decode dan simpan chart images dari base64 (cross-container transfer)
+            $chartPaths = $validated['chart_paths'] ?? [];
+            if (!empty($validated['chart_images'])) {
+                $chartPaths = []; // Rebuild from saved files
+                foreach ($validated['chart_images'] as $chartImage) {
+                    $chartPath = $chartImage['path'] ?? null;
+                    $chartData = $chartImage['data'] ?? null;
+                    $chartFilename = $chartImage['filename'] ?? null;
+
+                    if ($chartData && $chartPath) {
+                        try {
+                            $decoded = base64_decode($chartData);
+                            // Save to storage/app/public/charts/{report_id}/filename.png
+                            Storage::disk('public')->put($chartPath, $decoded);
+                            $chartPaths[] = $chartPath;
+                            Log::info("Chart saved: {$chartPath}");
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to save chart {$chartPath}: {$e->getMessage()}");
+                            $chartPaths[] = $chartPath; // Keep path even if save fails
+                        }
+                    } elseif ($chartPath) {
+                        $chartPaths[] = $chartPath;
+                    }
+                }
+            }
+
             // Update report dengan hasil dari Python
             $report->update([
                 'ai_narrative' => $validated['ai_narrative'] ?? null,
                 'summary_stats' => $validated['summary_stats'] ?? null,
                 'cleaning_log' => $validated['cleaning_log'] ?? null,
-                'chart_paths' => $validated['chart_paths'] ?? [],
+                'chart_paths' => $chartPaths,
                 'clean_path' => $validated['clean_path'] ?? null,
                 'clean_rows' => $validated['clean_rows'] ?? 0,
                 'ai_provider_used' => $validated['ai_provider_used'] ?? null,
