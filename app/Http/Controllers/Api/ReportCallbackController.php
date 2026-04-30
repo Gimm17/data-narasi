@@ -77,13 +77,20 @@ class ReportCallbackController extends Controller
             // Simpan AI usage logs jika ada
             if (!empty($validated['ai_usage_logs'])) {
                 foreach ($validated['ai_usage_logs'] as $logData) {
-                    // Cari provider berdasarkan nama (Python kirim short name seperti 'gemini')
+                    // Cari provider berdasarkan slug (Python kirim slug seperti 'gemini')
                     $providerName = $logData['provider_name'] ?? '';
-                    $provider = AIProvider::where('name', 'LIKE', "%{$providerName}%")->first();
+                    $provider = AIProvider::where('slug', $providerName)->first()
+                             ?? AIProvider::where('name', 'LIKE', "%{$providerName}%")->first();
+
+                    // Skip jika provider tidak ditemukan di DB (belum di-seed)
+                    if (!$provider) {
+                        Log::warning("AI Provider '{$providerName}' tidak ditemukan di DB, skip usage log");
+                        continue;
+                    }
 
                     AIUsageLog::create([
                         'report_id'       => $report->id,
-                        'ai_provider_id'  => $provider?->id ?? 0,
+                        'ai_provider_id'  => $provider->id,
                         'prompt_length'   => 0,
                         'response_length' => $logData['tokens_used'] ?? 0,
                         'tokens_used'     => $logData['tokens_used'] ?? null,

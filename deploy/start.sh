@@ -34,6 +34,7 @@ php artisan route:clear 2>/dev/null || true
 php artisan view:clear 2>/dev/null || true
 
 php artisan migrate --force 2>&1 || echo "⚠️  Migration skipped"
+php artisan db:seed --force 2>&1 || echo "⚠️  Seeding skipped"
 php artisan config:cache 2>&1 || echo "⚠️  Config cache skipped"
 php artisan route:cache 2>&1 || echo "⚠️  Route cache skipped"
 php artisan view:cache 2>&1 || echo "⚠️  View cache skipped"
