@@ -36,143 +36,164 @@ const submit = () => {
     <Head title="Login — DataNarasi" />
 
     <div class="login-page">
-        <!-- Animated background -->
-        <div class="bg-animation">
-            <div class="floating-orb orb-1"></div>
-            <div class="floating-orb orb-2"></div>
-            <div class="floating-orb orb-3"></div>
-            <div class="floating-orb orb-4"></div>
-            <div class="grid-overlay"></div>
+        <!-- Subtle animated background gradient -->
+        <div class="bg-decor">
+            <div class="gradient-blob blob-1"></div>
+            <div class="gradient-blob blob-2"></div>
         </div>
 
-        <!-- Login Card -->
-        <div class="login-container" :class="{ 'loaded': isLoaded }">
-            <!-- Brand Header -->
-            <div class="brand-section">
-                <div class="brand-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="brand-svg">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
-                        <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
-                        <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                    </svg>
-                </div>
-                <h1 class="brand-title">
-                    Data<span class="brand-accent">Narasi</span>
-                </h1>
-                <p class="brand-subtitle">Analisis Data Cerdas dengan AI</p>
-            </div>
-
-            <!-- Status Message -->
-            <div v-if="status" class="status-message">
-                <svg class="status-icon" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                {{ status }}
-            </div>
-
-            <!-- Login Form -->
-            <form @submit.prevent="submit" class="login-form">
-                <!-- Email Field -->
-                <div class="form-group">
-                    <label for="email" class="form-label">
-                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
-                        </svg>
-                        Email
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        class="form-input"
-                        v-model="form.email"
-                        required
-                        autofocus
-                        autocomplete="username"
-                        placeholder="nama@email.com"
-                    />
-                    <InputError class="form-error" :message="form.errors.email" />
-                </div>
-
-                <!-- Password Field -->
-                <div class="form-group">
-                    <label for="password" class="form-label">
-                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        Password
-                    </label>
-                    <div class="password-wrapper">
-                        <input
-                            id="password"
-                            :type="showPassword ? 'text' : 'password'"
-                            class="form-input"
-                            v-model="form.password"
-                            required
-                            autocomplete="current-password"
-                            placeholder="••••••••"
-                        />
-                        <button type="button" class="password-toggle" @click="showPassword = !showPassword">
-                            <svg v-if="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        </button>
+        <div class="login-wrapper" :class="{ 'loaded': isLoaded }">
+            <!-- Left: Form -->
+            <div class="form-side">
+                <div class="form-inner">
+                    <!-- Brand -->
+                    <div class="brand">
+                        <Link href="/" class="brand-link">
+                            <span class="brand-text">Data<span class="brand-accent">Narasi</span></span>
+                        </Link>
                     </div>
-                    <InputError class="form-error" :message="form.errors.password" />
+
+                    <h1 class="form-title">Selamat Datang!</h1>
+                    <p class="form-subtitle">Masuk ke akun Anda untuk melanjutkan analisis data.</p>
+
+                    <!-- Status Message -->
+                    <div v-if="status" class="status-msg">
+                        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        {{ status }}
+                    </div>
+
+                    <!-- Form -->
+                    <form @submit.prevent="submit" class="login-form">
+                        <div class="field">
+                            <label for="email" class="field-label">Email</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    class="field-input"
+                                    v-model="form.email"
+                                    required
+                                    autofocus
+                                    autocomplete="username"
+                                    placeholder="nama@email.com"
+                                />
+                            </div>
+                            <InputError class="field-error" :message="form.errors.email" />
+                        </div>
+
+                        <div class="field">
+                            <label for="password" class="field-label">Password</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <input
+                                    id="password"
+                                    :type="showPassword ? 'text' : 'password'"
+                                    class="field-input"
+                                    v-model="form.password"
+                                    required
+                                    autocomplete="current-password"
+                                    placeholder="••••••••"
+                                />
+                                <button type="button" class="eye-btn" @click="showPassword = !showPassword" tabindex="-1">
+                                    <svg v-if="!showPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            <InputError class="field-error" :message="form.errors.password" />
+                        </div>
+
+                        <div class="options-row">
+                            <label class="remember">
+                                <input type="checkbox" v-model="form.remember" class="remember-box" />
+                                <span>Ingat saya</span>
+                            </label>
+                            <Link
+                                v-if="canResetPassword"
+                                :href="route('password.request')"
+                                class="forgot"
+                            >
+                                Lupa password?
+                            </Link>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="submit-btn"
+                            :disabled="form.processing"
+                        >
+                            <svg v-if="form.processing" class="spinner" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round" />
+                            </svg>
+                            <template v-else>
+                                Masuk
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </template>
+                        </button>
+                    </form>
+
+                    <p class="footer-text">
+                        Belum punya akun?
+                        <Link :href="route('register')" class="register-link">Daftar Sekarang</Link>
+                    </p>
                 </div>
-
-                <!-- Remember + Forgot -->
-                <div class="form-options">
-                    <label class="remember-label">
-                        <input type="checkbox" v-model="form.remember" class="remember-checkbox" />
-                        <span>Ingat saya</span>
-                    </label>
-                    <Link
-                        v-if="canResetPassword"
-                        :href="route('password.request')"
-                        class="forgot-link"
-                    >
-                        Lupa password?
-                    </Link>
-                </div>
-
-                <!-- Submit Button -->
-                <button
-                    type="submit"
-                    class="submit-btn"
-                    :class="{ 'is-loading': form.processing }"
-                    :disabled="form.processing"
-                >
-                    <svg v-if="form.processing" class="spinner" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round" />
-                    </svg>
-                    <span v-else>Masuk</span>
-                </button>
-            </form>
-
-            <!-- Footer -->
-            <div class="login-footer">
-                <p>Belum punya akun? <Link :href="route('register')" class="register-link">Daftar Sekarang</Link></p>
             </div>
-        </div>
 
-        <!-- Decorative particles -->
-        <div class="particles">
-            <span v-for="i in 20" :key="i" class="particle" :style="{
-                '--delay': `${Math.random() * 6}s`,
-                '--x': `${Math.random() * 100}vw`,
-                '--duration': `${4 + Math.random() * 6}s`,
-                '--size': `${2 + Math.random() * 4}px`,
-            }"></span>
+            <!-- Right: Illustration / Info Panel -->
+            <div class="info-side">
+                <div class="info-content">
+                    <div class="info-badge">✨ Gratis & Tanpa Batas</div>
+                    <h2 class="info-title">Ubah Data Mentah<br />Menjadi <span class="info-accent">Insight Bermakna</span></h2>
+                    <p class="info-desc">Upload CSV/Excel → AI menganalisis dan menulis narasi bisnis dalam hitungan menit.</p>
+
+                    <div class="info-stats">
+                        <div class="stat">
+                            <div class="stat-num">11</div>
+                            <div class="stat-label">Tipe Analisis</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-num">6</div>
+                            <div class="stat-label">Tone Narasi</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-num">6</div>
+                            <div class="stat-label">AI Provider</div>
+                        </div>
+                    </div>
+
+                    <div class="info-features">
+                        <div class="feature-pill">
+                            <span class="pill-icon">🧹</span> Auto Cleansing
+                        </div>
+                        <div class="feature-pill">
+                            <span class="pill-icon">🤖</span> Multi-AI Fallback
+                        </div>
+                        <div class="feature-pill">
+                            <span class="pill-icon">📊</span> Interactive Charts
+                        </div>
+                        <div class="feature-pill">
+                            <span class="pill-icon">✍️</span> Narasi Otomatis
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -180,419 +201,345 @@ const submit = () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-* {
-    font-family: 'Inter', sans-serif;
-}
+* { font-family: 'Inter', sans-serif; }
 
 .login-page {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0a0e1a;
+    background: #f8fafb;
     position: relative;
     overflow: hidden;
+    padding: 1rem;
 }
 
-/* === Animated Background === */
-.bg-animation {
+/* Subtle background blobs matching landing page */
+.bg-decor {
     position: absolute;
     inset: 0;
-    overflow: hidden;
-    z-index: 0;
-}
-
-.floating-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.4;
-    animation: float 8s ease-in-out infinite;
-}
-
-.orb-1 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, #0d9488, #14b8a6);
-    top: -100px;
-    left: -100px;
-    animation-delay: 0s;
-}
-
-.orb-2 {
-    width: 300px;
-    height: 300px;
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    bottom: -80px;
-    right: -80px;
-    animation-delay: 2s;
-}
-
-.orb-3 {
-    width: 200px;
-    height: 200px;
-    background: linear-gradient(135deg, #06b6d4, #22d3ee);
-    top: 50%;
-    right: 20%;
-    animation-delay: 4s;
-}
-
-.orb-4 {
-    width: 250px;
-    height: 250px;
-    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-    bottom: 30%;
-    left: 15%;
-    animation-delay: 6s;
-}
-
-.grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -30px) scale(1.05); }
-    66% { transform: translate(-20px, 20px) scale(0.95); }
-}
-
-/* === Particles === */
-.particles {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
     pointer-events: none;
+    z-index: 0;
 }
-
-.particle {
+.gradient-blob {
     position: absolute;
-    width: var(--size);
-    height: var(--size);
-    background: rgba(20, 184, 166, 0.6);
     border-radius: 50%;
-    left: var(--x);
-    bottom: -10px;
-    animation: rise var(--duration) var(--delay) linear infinite;
+    filter: blur(100px);
+    opacity: 0.35;
+}
+.blob-1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, #ccfbf1, transparent 70%);
+    top: -150px; right: -100px;
+    animation: drift 12s ease-in-out infinite alternate;
+}
+.blob-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #dbeafe, transparent 70%);
+    bottom: -120px; left: -80px;
+    animation: drift 10s ease-in-out infinite alternate-reverse;
+}
+@keyframes drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(30px, -20px); }
 }
 
-@keyframes rise {
-    0% { transform: translateY(0) scale(1); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-100vh) scale(0); opacity: 0; }
-}
-
-/* === Login Container === */
-.login-container {
+/* Layout Wrapper */
+.login-wrapper {
     position: relative;
     z-index: 10;
+    display: flex;
     width: 100%;
-    max-width: 420px;
-    margin: 1rem;
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 2.5rem;
-    box-shadow:
-        0 0 0 1px rgba(255,255,255,0.05),
-        0 20px 50px rgba(0, 0, 0, 0.5),
-        0 0 100px rgba(20, 184, 166, 0.05);
+    max-width: 960px;
+    min-height: 560px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 40px rgba(0,0,0,0.06);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
-    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-.login-container.loaded {
+.login-wrapper.loaded {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
 }
 
-/* === Brand Section === */
-.brand-section {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.brand-icon {
-    display: inline-flex;
+/* Left: Form Side */
+.form-side {
+    flex: 1;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #0d9488, #14b8a6);
-    margin-bottom: 1rem;
-    animation: pulse-glow 3s ease-in-out infinite;
+    padding: 3rem 2.5rem;
+}
+.form-inner {
+    width: 100%;
+    max-width: 360px;
 }
 
-.brand-svg {
-    width: 32px;
-    height: 32px;
-    color: white;
-}
-
-@keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(20, 184, 166, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(20, 184, 166, 0.5), 0 0 60px rgba(20, 184, 166, 0.2); }
-}
-
-.brand-title {
-    font-size: 2rem;
+.brand-link { text-decoration: none; }
+.brand-text {
+    font-size: 1.5rem;
     font-weight: 800;
-    color: #f1f5f9;
-    letter-spacing: -0.02em;
+    color: #111827;
+}
+.brand-accent { color: #0d9488; }
+
+.form-title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 1.5rem;
+    line-height: 1.2;
+}
+.form-subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 0.375rem;
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
 }
 
-.brand-accent {
-    background: linear-gradient(135deg, #14b8a6, #06b6d4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.brand-subtitle {
-    color: #64748b;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    font-weight: 400;
-}
-
-/* === Status Message === */
-.status-message {
+/* Status */
+.status-msg {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 12px;
-    color: #34d399;
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
+    padding: 0.625rem 0.875rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    color: #15803d;
+    font-size: 0.8125rem;
+    margin-bottom: 1.25rem;
 }
 
-.status-icon {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-}
-
-/* === Form === */
+/* Form */
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.125rem;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.field-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.375rem;
 }
 
-.form-label {
+.input-wrap {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #94a3b8;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
-
-.label-icon {
-    width: 16px;
-    height: 16px;
-    opacity: 0.6;
+.input-icon {
+    position: absolute;
+    left: 0.875rem;
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+    pointer-events: none;
 }
-
-.form-input {
+.field-input {
     width: 100%;
-    padding: 0.875rem 1rem;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(100, 116, 139, 0.2);
+    padding: 0.75rem 0.875rem 0.75rem 2.75rem;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
     border-radius: 12px;
-    color: #f1f5f9;
-    font-size: 0.9375rem;
+    color: #111827;
+    font-size: 0.9rem;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s;
 }
-
-.form-input::placeholder {
-    color: #475569;
-}
-
-.form-input:focus {
+.field-input::placeholder { color: #9ca3af; }
+.field-input:focus {
     border-color: #14b8a6;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
-    background: rgba(30, 41, 59, 0.8);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+    background: #fff;
 }
 
-.form-error {
-    color: #f87171;
-    font-size: 0.8125rem;
-}
-
-/* === Password === */
-.password-wrapper {
-    position: relative;
-}
-
-.password-wrapper .form-input {
-    padding-right: 3rem;
-}
-
-.password-toggle {
+.eye-btn {
     position: absolute;
     right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    color: #64748b;
-    padding: 0.25rem;
+    color: #9ca3af;
+    padding: 4px;
     transition: color 0.2s;
 }
+.eye-btn:hover { color: #6b7280; }
 
-.password-toggle:hover {
-    color: #94a3b8;
-}
+.field-error { color: #dc2626; font-size: 0.8125rem; margin-top: 0.25rem; }
 
-.password-toggle svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* === Options Row === */
-.form-options {
+/* Options */
+.options-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-
-.remember-label {
+.remember {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #94a3b8;
     font-size: 0.8125rem;
+    color: #6b7280;
     cursor: pointer;
 }
-
-.remember-checkbox {
-    width: 16px;
-    height: 16px;
+.remember-box {
+    width: 16px; height: 16px;
     border-radius: 4px;
-    border: 1px solid rgba(100, 116, 139, 0.3);
-    background: rgba(30, 41, 59, 0.6);
-    accent-color: #14b8a6;
+    border: 1.5px solid #d1d5db;
+    accent-color: #0d9488;
 }
-
-.forgot-link {
-    color: #14b8a6;
+.forgot {
     font-size: 0.8125rem;
     font-weight: 500;
+    color: #0d9488;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color 0.15s;
 }
+.forgot:hover { color: #0f766e; }
 
-.forgot-link:hover {
-    color: #2dd4bf;
-}
-
-/* === Submit Button === */
+/* Submit */
 .submit-btn {
     width: 100%;
-    padding: 0.875rem;
-    background: linear-gradient(135deg, #0d9488, #14b8a6);
-    color: white;
-    font-size: 1rem;
+    padding: 0.8rem;
+    background: #0d9488;
+    color: #fff;
+    font-size: 0.9375rem;
     font-weight: 600;
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.25s;
+    margin-top: 0.25rem;
 }
-
-.submit-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
-    transform: translateX(-100%);
-    transition: transform 0.6s;
-}
-
-.submit-btn:hover::before {
-    transform: translateX(100%);
-}
-
 .submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(20, 184, 166, 0.3);
+    background: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
 }
-
-.submit-btn:active {
-    transform: translateY(0);
-}
-
-.submit-btn.is-loading {
-    pointer-events: none;
-    opacity: 0.7;
-}
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; pointer-events: none; }
 
 .spinner {
-    width: 24px;
-    height: 24px;
+    width: 22px; height: 22px;
     animation: spin 1s linear infinite;
-    margin: 0 auto;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* === Footer === */
-.login-footer {
+/* Footer */
+.footer-text {
     text-align: center;
     margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    color: #64748b;
     font-size: 0.875rem;
+    color: #6b7280;
 }
-
 .register-link {
-    color: #14b8a6;
+    color: #0d9488;
     font-weight: 600;
     text-decoration: none;
-    transition: color 0.2s;
+}
+.register-link:hover { color: #0f766e; text-decoration: underline; }
+
+/* Right: Info Panel */
+.info-side {
+    flex: 1;
+    background: linear-gradient(145deg, #f0fdfa, #e6fffa, #ecfdf5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+    position: relative;
+    border-left: 1px solid #e5e7eb;
+}
+.info-content {
+    max-width: 340px;
 }
 
-.register-link:hover {
-    color: #2dd4bf;
+.info-badge {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+}
+.info-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.3;
+    margin-bottom: 0.75rem;
+}
+.info-accent { color: #0d9488; }
+.info-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
 }
 
-/* === Responsive === */
-@media (max-width: 480px) {
-    .login-container {
-        padding: 1.5rem;
-        border-radius: 20px;
+.info-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.stat { text-align: center; }
+.stat-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0d9488;
+}
+.stat-label {
+    font-size: 0.6875rem;
+    color: #6b7280;
+    margin-top: 0.125rem;
+    font-weight: 500;
+}
+
+.info-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.feature-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    backdrop-filter: blur(4px);
+}
+.pill-icon { font-size: 0.875rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .login-wrapper {
+        flex-direction: column;
+        max-width: 440px;
     }
-
-    .brand-title {
-        font-size: 1.75rem;
+    .info-side {
+        display: none;
+    }
+    .form-side {
+        padding: 2rem 1.5rem;
     }
 }
 </style>
