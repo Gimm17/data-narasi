@@ -149,10 +149,7 @@ const submit = () => {
                         </button>
                     </form>
 
-                    <p class="footer-text">
-                        Belum punya akun?
-                        <Link :href="route('register')" class="register-link">Daftar Sekarang</Link>
-                    </p>
+
                 </div>
             </div>
 
@@ -444,12 +441,6 @@ const submit = () => {
     font-size: 0.875rem;
     color: #6b7280;
 }
-.register-link {
-    color: #0d9488;
-    font-weight: 600;
-    text-decoration: none;
-}
-.register-link:hover { color: #0f766e; text-decoration: underline; }
 
 /* Right: Info Panel */
 .info-side {
