@@ -20,12 +20,15 @@ class DatabaseSeeder extends Seeder
             AIProviderSeeder::class,
         ]);
 
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'User',
-            'email' => 'test@gmail.com',
-            'is_admin' => true,
-        ]);
+        // Create admin user (idempotent — safe to run multiple times)
+        User::updateOrCreate(
+            ['email' => 'admin17@gmail.com'],
+            [
+                'name' => 'Admin',
+                'email' => 'admin17@gmail.com',
+                'password' => bcrypt('17admin1717'),
+                'is_admin' => true,
+            ]
+        );
     }
 }
