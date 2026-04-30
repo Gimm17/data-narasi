@@ -1,5 +1,105 @@
 # Release Notes
 
+## [2026-04-29/30 v4] — Railway Production Deployment & UI Polish
+
+### 🚀 Railway Deployment (`🚂 RAILWAY-SPECIFIC`)
+
+> Perubahan di section ini dilakukan untuk mendukung hosting di Railway.
+> Beberapa mungkin perlu di-rollback jika kembali ke lokal development.
+
+- **Dockerfile & Docker Setup** `🚂`
+  - Created `Dockerfile` — Alpine-based PHP 8.4, nginx, supervisord multi-process container.
+  - Upgraded PHP 8.3 → 8.4 (required by Laravel 13 + Symfony 8.x).
+  - Created `.dockerignore` — exclude node_modules, .git, tests, etc.
+  - Created `railway.json` — healthcheck config (`/health.php`, 300s timeout).
+  - Created `deploy/nginx.conf` — nginx reverse proxy config (port from `$PORT`).
+  - Created `deploy/supervisord.conf` — manages nginx, php-fpm, queue-worker.
+  - Created `deploy/php-custom.ini` — production PHP settings (opcache, error logging, output buffering).
+  - Created `public/health.php` — lightweight healthcheck bypassing Laravel bootstrap.
+
+- **Startup Script** `🚂`
+  - Created `deploy/start.sh` — bulletproof startup script:
+    - No `set -e` (must reach supervisord no matter what).
+    - Auto-generates `.env` from Railway environment variables.
+    - Runs `migrate --force`, `db:seed --force`, `config:cache`, `route:cache`, `view:cache`.
+    - All artisan commands wrapped in fallback `|| true`.
+
+- **HTTPS & Proxy** `🚂`
+  - `AppServiceProvider.php` — Added `URL::forceScheme('https')` in production.
+  - `bootstrap/app.php` — Added `TrustProxies` middleware (`at: '*'`) for Railway load balancer.
+
+- **Python Service Containerization** `🚂`
+  - `python-service/Dockerfile` — Separate container for FastAPI service.
+  - Environment variables: `PORT=8001`, `ALLOWED_ORIGINS`, API keys.
+  - Internal networking via `python-service.railway.internal:8001`.
+
+### 🔗 Cross-Container File Transfer `🚂`
+
+- **Problem:** Python service couldn't access Laravel's filesystem (separate containers).
+- **Solution:** Base64 file transfer via API payload.
+- `PythonServiceClient.php` — Reads file, encodes to base64, sends `file_content` + `file_name` in JSON.
+- `python-service/main.py`:
+  - `ProcessRequest` model — Added `file_content` (Optional[str]) and `file_name` (Optional[str]).
+  - `_process_report_background()` — Decodes base64, saves to `storage/uploads/`, uses local path for processing.
+  - Fixed bug: `cleaner.run(request.file_path)` → `cleaner.run(str(file_path))` (was using original remote path instead of locally saved file).
+
+### 🔑 Database Seeding & Callback Fix
+
+- **DatabaseSeeder.php** — Admin user seeder with `updateOrCreate`:
+  - Email: `admin17@gmail.com`, Password: `<REDACTED_ADMIN_PASSWORD>`, `is_admin: true`.
+- **AIProviderSeeder.php** — 6 providers seeded via `updateOrCreate` (idempotent).
+- **ReportCallbackController.php** — Fixed FK violation (`ai_provider_id = 0`):
+  - Now searches by `slug` first, then fallback `name LIKE`.
+  - Skips `AIUsageLog::create` if provider not found (instead of crashing).
+- **start.sh** — Added `php artisan db:seed --force` to startup sequence.
+
+### 🎨 UI Redesign
+
+- **Login Page** (`Login.vue`) — Complete redesign:
+  - Split layout: left form + right info panel.
+  - Matched landing page colors (`bg-gray-50`, `teal-600` accents, white cards).
+  - Show/hide password toggle, animated entrance, Inter font.
+  - Info panel with stats (11 Tipe Analisis, 6 Tone, 6 AI Provider) + feature pills.
+  - Responsive: info panel hidden on mobile.
+- **Navbar** (`AppLayout.vue`) — Profile dropdown with logout:
+  - Clickable avatar → dropdown menu (nama, email, role badge).
+  - Logout button (merah) via `router.post(route('logout'))`.
+  - Animated dropdown with Vue `<Transition>`.
+  - Mobile hamburger menu.
+  - Brand logo icon added.
+
+### 🔧 AI Provider Panel Fix
+
+- **AIProvider.php** — `isReady()` no longer checks `env()` for API keys:
+  - Old: `return $this->is_enabled && $this->getApiKey() !== null` (fails in production because keys are in Python service).
+  - New: `return $this->is_enabled && !empty($this->api_key_env)`.
+  - `getApiKey()` returns `'[configured-in-python-service]'` as fallback when env is empty but provider is configured.
+
+### Modified Files
+| File | Change | Railway? |
+|------|--------|----------|
+| `Dockerfile` | [NEW] Alpine PHP 8.4 container | 🚂 |
+| `.dockerignore` | [NEW] Docker exclusions | 🚂 |
+| `railway.json` | [NEW] Healthcheck config | 🚂 |
+| `deploy/start.sh` | [NEW] Startup + .env generation + seed | 🚂 |
+| `deploy/nginx.conf` | [NEW] Nginx reverse proxy | 🚂 |
+| `deploy/supervisord.conf` | [NEW] Process manager | 🚂 |
+| `deploy/php-custom.ini` | [NEW] Production PHP config | 🚂 |
+| `public/health.php` | [NEW] Lightweight healthcheck | 🚂 |
+| `python-service/Dockerfile` | [NEW] Python container | 🚂 |
+| `python-service/storage/uploads/.gitkeep` | [NEW] Upload directory | 🚂 |
+| `app/Providers/AppServiceProvider.php` | Force HTTPS in production | 🚂 |
+| `bootstrap/app.php` | TrustProxies at: '*' | 🚂 |
+| `app/Services/PythonServiceClient.php` | Base64 file transfer | 🚂 |
+| `python-service/main.py` | Receive base64 + save locally | 🚂 |
+| `app/Http/Controllers/Api/ReportCallbackController.php` | FK fix + slug lookup | |
+| `app/Models/AIProvider.php` | isReady() microservice-aware | 🚂 |
+| `database/seeders/DatabaseSeeder.php` | Admin user seeder | |
+| `resources/js/Pages/Auth/Login.vue` | Full redesign | |
+| `resources/js/Layouts/AppLayout.vue` | Profile dropdown + logout | |
+
+---
+
 ## [2026-04-28 v3] - Expanded Upload Options & Dynamic Provider Order
 
 ### 📋 Upload Options Expansion
