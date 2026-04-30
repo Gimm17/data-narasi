@@ -67,26 +67,38 @@ class AIProvider extends Model
 
     /**
      * Ambil API Key dari environment variable berdasarkan api_key_env
-     * Return null jika env variable tidak ada atau kosong
+     * 
+     * CATATAN: Dalam arsitektur microservice, API keys disimpan di Python service.
+     * Method ini hanya untuk backward compatibility dan pengecekan lokal.
+     * Jika key tidak ada di Laravel env, cek apakah ada record di ai_providers
+     * yang menandakan key sudah dikonfigurasi di Python service.
      */
     public function getApiKey(): ?string
     {
+        // Coba dari Laravel env (untuk local dev)
         $key = env($this->api_key_env);
 
-        if (empty($key)) {
-            return null;
+        if (!empty($key)) {
+            return $key;
         }
 
-        return $key;
+        // Di production, API keys ada di Python service container
+        // Anggap tersedia jika provider enabled dan api_key_env sudah dikonfigurasi
+        if ($this->is_enabled && !empty($this->api_key_env)) {
+            return '[configured-in-python-service]';
+        }
+
+        return null;
     }
 
     /**
      * Cek apakah provider ini siap digunakan
-     * Harus enabled dan punya API key
+     * Harus enabled dan punya api_key_env yang dikonfigurasi
+     * (Pengecekan actual API key dilakukan oleh Python service)
      */
     public function isReady(): bool
     {
-        return $this->is_enabled && $this->getApiKey() !== null;
+        return $this->is_enabled && !empty($this->api_key_env);
     }
 
     /**
