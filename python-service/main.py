@@ -330,12 +330,20 @@ def _process_report_background(request: ProcessRequest):
         )
 
         # Prepare callback data
+        # chart_paths is now a list of dicts: [{path, data, filename}, ...]
+        chart_path_list = [c['path'] for c in chart_paths] if chart_paths else []
+        chart_image_list = [
+            {'path': c['path'], 'data': c['data'], 'filename': c['filename']}
+            for c in chart_paths if c.get('data')
+        ] if chart_paths else []
+
         callback_data = {
             'status': 'success' if narrative_result['success'] else 'failed',
             'ai_narrative': narrative_result['narrative'] if narrative_result['success'] else None,
             'summary_stats': stats,
             'cleaning_log': clean_result['cleaning_log'],
-            'chart_paths': chart_paths,
+            'chart_paths': chart_path_list,
+            'chart_images': chart_image_list,
             'clean_path': clean_result.get('clean_path'),
             'clean_rows': len(clean_result['df']),
             'ai_provider_used': narrative_result['provider_used'],
