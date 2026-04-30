@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { Head, Link, usePage, router } from '@inertiajs/vue3'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
     title?: string
@@ -10,9 +10,12 @@ const isLoggedIn = computed(() => {
     return !!usePage().props?.auth?.user
 })
 
-// Ambil nama user untuk avatar initials
 const userName = computed(() => {
     return usePage().props?.auth?.user?.name || 'Guest'
+})
+
+const userEmail = computed(() => {
+    return usePage().props?.auth?.user?.email || ''
 })
 
 const isAdmin = computed(() => {
@@ -27,6 +30,36 @@ const userInitials = computed(() => {
     }
     return name.substring(0, 2).toUpperCase()
 })
+
+// Profile dropdown
+const showDropdown = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+
+const toggleDropdown = () => {
+    showDropdown.value = !showDropdown.value
+}
+
+const closeDropdown = (e: MouseEvent) => {
+    if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
+        showDropdown.value = false
+    }
+}
+
+const logout = () => {
+    showDropdown.value = false
+    router.post(route('logout'))
+}
+
+// Mobile menu
+const showMobileMenu = ref(false)
+
+onMounted(() => {
+    document.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('click', closeDropdown)
+})
 </script>
 
 <template>
@@ -34,70 +67,220 @@ const userInitials = computed(() => {
 
     <div class="min-h-screen bg-gray-50">
         <!-- Topbar -->
-        <nav class="bg-white shadow-sm border-b border-gray-200">
+        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <!-- Logo -->
                     <div class="flex items-center">
-                        <Link :href="route('home')" class="flex items-center space-x-2">
-                            <span class="text-2xl font-bold text-gray-900">
+                        <Link :href="route('home')" class="flex items-center space-x-2 group">
+                            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                            <span class="text-xl font-bold text-gray-900">
                                 Data<span class="text-teal-600">Narasi</span>
                             </span>
                         </Link>
                     </div>
 
-                    <!-- Navigation Links -->
-                    <div class="flex items-center space-x-8">
+                    <!-- Desktop Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-1">
                         <Link
                             :href="route('upload.create')"
-                            class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                            :class="{ 'text-teal-600': route().current('upload.*') }"
+                            class="nav-link"
+                            :class="{ 'nav-link-active': route().current('upload.*') }"
                         >
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
                             Upload
                         </Link>
 
                         <Link
                             :href="route('reports.index')"
-                            class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                            :class="{ 'text-teal-600': route().current('reports.*') }"
+                            class="nav-link"
+                            :class="{ 'nav-link-active': route().current('reports.*') }"
                         >
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
                             Riwayat
                         </Link>
 
                         <Link
                             v-if="isAdmin"
                             :href="route('dashboard')"
-                            class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                            :class="{ 'text-teal-600': route().current('dashboard') }"
+                            class="nav-link"
+                            :class="{ 'nav-link-active': route().current('dashboard') }"
                         >
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
                             Dashboard
                         </Link>
 
                         <Link
                             v-if="isAdmin"
                             :href="route('admin.ai-providers.index')"
-                            class="text-gray-700 hover:text-teal-600 font-medium transition-colors"
-                            :class="{ 'text-teal-600': route().current('admin.*') }"
+                            class="nav-link"
+                            :class="{ 'nav-link-active': route().current('admin.*') }"
                         >
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
                             AI Providers
                         </Link>
                     </div>
 
-                    <div class="flex items-center">
+                    <!-- Right Section: Profile -->
+                    <div class="flex items-center gap-3">
                         <template v-if="isLoggedIn">
-                            <div class="flex items-center space-x-3">
-                                <div class="text-right hidden sm:block">
-                                    <div class="text-sm font-medium text-gray-900">{{ userName }}</div>
-                                    <div class="text-xs text-gray-500">{{ isAdmin ? 'Admin' : 'User' }}</div>
-                                </div>
-                                <div class="h-10 w-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold">
-                                    {{ userInitials }}
-                                </div>
+                            <!-- Profile Dropdown -->
+                            <div class="relative" ref="dropdownRef">
+                                <button
+                                    @click="toggleDropdown"
+                                    class="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                                >
+                                    <div class="h-9 w-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                                        {{ userInitials }}
+                                    </div>
+                                    <div class="text-right hidden sm:block">
+                                        <div class="text-sm font-medium text-gray-900 leading-tight">{{ userName }}</div>
+                                        <div class="text-xs text-gray-500 leading-tight">{{ isAdmin ? 'Admin' : 'User' }}</div>
+                                    </div>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform" :class="{ 'rotate-180': showDropdown }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <Transition
+                                    enter-active-class="transition ease-out duration-200"
+                                    enter-from-class="opacity-0 scale-95 -translate-y-1"
+                                    enter-to-class="opacity-100 scale-100 translate-y-0"
+                                    leave-active-class="transition ease-in duration-150"
+                                    leave-from-class="opacity-100 scale-100 translate-y-0"
+                                    leave-to-class="opacity-0 scale-95 -translate-y-1"
+                                >
+                                    <div v-if="showDropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                                        <!-- User Info -->
+                                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                                            <div class="flex items-center gap-3">
+                                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-semibold">
+                                                    {{ userInitials }}
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ userName }}</div>
+                                                    <div class="text-xs text-gray-500">{{ userEmail }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Menu Items -->
+                                        <div class="py-1">
+                                            <Link
+                                                v-if="isAdmin"
+                                                :href="route('dashboard')"
+                                                class="dropdown-item"
+                                                @click="showDropdown = false"
+                                            >
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                                </svg>
+                                                Dashboard
+                                            </Link>
+
+                                            <Link
+                                                v-if="isAdmin"
+                                                :href="route('admin.ai-providers.index')"
+                                                class="dropdown-item"
+                                                @click="showDropdown = false"
+                                            >
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="12" cy="12" r="3"></circle>
+                                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852 1.002 1.51 1H21a2 2 0 0 1 0 4h-.09c-.658 0-1.25.398-1.51 1z"></path>
+                                                </svg>
+                                                AI Providers
+                                            </Link>
+                                        </div>
+
+                                        <!-- Logout -->
+                                        <div class="border-t border-gray-100 py-1">
+                                            <button
+                                                @click="logout"
+                                                class="dropdown-item text-red-600 hover:bg-red-50 w-full"
+                                            >
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                                </svg>
+                                                Keluar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </Transition>
                             </div>
                         </template>
+
+                        <template v-else>
+                            <Link :href="route('login')" class="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors">
+                                Login
+                            </Link>
+                            <Link :href="route('register')" class="text-sm font-medium bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+                                Daftar
+                            </Link>
+                        </template>
+
+                        <!-- Mobile menu button -->
+                        <button @click="showMobileMenu = !showMobileMenu" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                            <svg v-if="!showMobileMenu" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                            </svg>
+                            <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Mobile Navigation -->
+            <Transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="opacity-0 -translate-y-2"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-150"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-2"
+            >
+                <div v-if="showMobileMenu" class="md:hidden border-t border-gray-100 bg-white">
+                    <div class="px-4 py-3 space-y-1">
+                        <Link :href="route('upload.create')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('upload.*') }">Upload</Link>
+                        <Link :href="route('reports.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('reports.*') }">Riwayat</Link>
+                        <Link v-if="isAdmin" :href="route('dashboard')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('dashboard') }">Dashboard</Link>
+                        <Link v-if="isAdmin" :href="route('admin.ai-providers.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('admin.*') }">AI Providers</Link>
+                    </div>
+                </div>
+            </Transition>
         </nav>
 
         <!-- Main Content -->
@@ -115,3 +298,62 @@ const userInitials = computed(() => {
         </footer>
     </div>
 </template>
+
+<style scoped>
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    color: #0d9488;
+    background-color: #f0fdfa;
+}
+
+.nav-link-active {
+    color: #0d9488;
+    background-color: #f0fdfa;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    transition: background-color 0.15s;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f9fafb;
+}
+
+.mobile-nav-link {
+    display: block;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #4b5563;
+    transition: all 0.15s;
+}
+
+.mobile-nav-link:hover {
+    background-color: #f0fdfa;
+    color: #0d9488;
+}
+
+.mobile-nav-active {
+    background-color: #f0fdfa;
+    color: #0d9488;
+}
+</style>
