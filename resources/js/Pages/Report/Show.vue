@@ -217,19 +217,19 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
 
             <!-- ═══ QUICK STATS ═══ -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6 sm:mb-8">
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Total Baris</div>
                     <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ report.total_rows.toLocaleString('id-ID') }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Baris Bersih</div>
                     <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ report.clean_rows.toLocaleString('id-ID') }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Kualitas Data</div>
                     <div class="text-xl sm:text-2xl font-bold mt-1.5 tabular-nums" :class="{
                         'text-emerald-600': cleanPercentage >= 90,
@@ -239,7 +239,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                         {{ cleanPercentage }}%
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Waktu Proses</div>
                     <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ processingTime }}
@@ -313,7 +313,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                     <div
                         v-for="(chartPath, index) in report.chart_paths"
                         :key="index"
-                        class="rounded-xl border border-gray-200 bg-white p-4"
+                        class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 p-4"
                     >
                         <img
                             :src="getChartUrl(chartPath)"
@@ -354,7 +354,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
 
             <!-- ═══ AI USAGE INFO (compact) ═══ -->
             <div v-if="report.total_tokens || report.cost_usd" class="mb-8">
-                <div class="rounded-xl border border-gray-200 bg-white px-5 py-3.5">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-5 py-3.5">
                     <div class="flex items-center justify-between flex-wrap gap-y-2">
                         <div class="flex items-center gap-1.5">
                             <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">⚡ AI Usage</span>
@@ -383,7 +383,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                 v-if="report.outputs && report.outputs.length > 0"
                 class="mb-8"
             >
-                <div class="rounded-xl border border-gray-200 bg-white">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300">
                     <div class="px-5 py-3.5 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">Download & Share</h3>
                     </div>

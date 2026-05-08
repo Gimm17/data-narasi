@@ -83,10 +83,10 @@ const goToPage = (page: number) => {
             <!-- Header -->
             <div class="flex items-center justify-between mb-8">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
                         Riwayat Analisis
                     </h1>
-                    <p class="mt-1 text-gray-600">
+                    <p class="mt-1 text-gray-600 dark:text-gray-400">
                         Daftar semua analisis data yang pernah Anda lakukan
                     </p>
                 </div>
@@ -126,7 +126,7 @@ const goToPage = (page: number) => {
                 <div
                     v-for="report in reports.data"
                     :key="report.id"
-                    class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    class="bg-white dark:bg-cream-300 border border-gray-200 dark:border-cream-400 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                     <div class="flex items-center justify-between">
                         <!-- Report Info -->
