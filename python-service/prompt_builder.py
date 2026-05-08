@@ -1,273 +1,250 @@
 """
-Prompt Builder Module
-Merakit prompt untuk AI berdasarkan tipe analisis dan tone
+Prompt Builder Module v2
+Data-rich prompts — sends actual aggregated data to AI for Claude-quality insights
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List, Any
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
 
 class PromptBuilder:
-    """
-    Builder untuk membuat prompt ke AI
-    """
+    """Build data-rich prompts for AI narrative generation"""
 
-    # Fokus analisis per tipe dataset
     ANALYSIS_FOCUS = {
         'penjualan': {
-            'focus': 'fokus pada tren penjualan, produk terlaris, pertumbuhan revenue, dan pola pembelian pelanggan.',
-            'metrics': 'total revenue, growth rate, produk teratas, pola musiman/waktu',
-            'business_questions': [
-                'Bagaimana tren penjualan bulanan?',
-                'Produk apa yang paling laris?',
-                'Apakah ada pertumbuhan atau penurunan?',
-                'Kapan periode penjualan puncak?'
-            ]
+            'focus': 'tren penjualan, produk terlaris, pertumbuhan revenue, pola musiman, segmentasi pelanggan, dan distribusi harga.',
+            'metrics': 'total revenue, growth rate YoY, produk/kategori teratas, average order value, median vs mean (skewness), seasonal patterns',
         },
         'keuangan': {
-            'focus': 'fokus pada arus kas, profitabilitas, rasio keuangan, dan kesehatan finansial.',
-            'metrics': 'arus kas masuk/keluar, profit margin, rasio likuiditas',
-            'business_questions': [
-                'Bagaimana arus kas perusahaan?',
-                'Apakah profitabilitas sehat?',
-                'Ada masalah likuiditas?',
-                'Rasio keuangan bagaimana?'
-            ]
+            'focus': 'arus kas, profitabilitas, rasio keuangan, tren pengeluaran, dan kesehatan finansial.',
+            'metrics': 'net cash flow, profit margin, expense ratio, tren bulanan, top cost centers',
         },
         'operasional': {
-            'focus': 'fokus pada efisiensi operasional, produktivitas, dan penggunaan resources.',
-            'metrics': 'produktivitas, efisiensi biaya, utilisasi kapasitas',
-            'business_questions': [
-                'Seberapa efisien operasional?',
-                'Ada pemborosan di mana saja?',
-                'Bagaimana utilisasi kapasitas?',
-                'Biaya operasional terkendali?'
-            ]
+            'focus': 'efisiensi operasional, produktivitas, utilisasi kapasitas, dan bottleneck.',
+            'metrics': 'achievement rate, produktivitas per unit, cycle time, capacity utilization',
         },
         'marketing': {
-            'focus': 'fokus pada performa kampanye, conversion rate, dan engagement pelanggan.',
-            'metrics': 'CTR, conversion rate, cost per acquisition, engagement metrics',
-            'business_questions': [
-                'Kampanye mana yang paling efektif?',
-                'Berapa conversion rate?',
-                'Cost per acquisition berapa?',
-                'Engagement pelanggan bagaimana?'
-            ]
+            'focus': 'performa kampanye, conversion funnel, ROI per channel, dan engagement metrics.',
+            'metrics': 'CTR, conversion rate, CPA, ROAS, engagement per platform',
         },
         'inventori': {
-            'focus': 'fokus pada turnover inventory, stock levels, dan permintaan produk.',
-            'metrics': 'turnover rate, stock levels, permintaan vs ketersediaan',
-            'business_questions': [
-                'Produk apa yang paling cepat habis?',
-                'Ada produk overstock/understock?',
-                'Kapan permintaan tertinggi?',
-                'Berapa turnover inventory?'
-            ]
+            'focus': 'turnover inventory, stock levels, dead stock, dan demand forecasting.',
+            'metrics': 'inventory turnover, stockout risk, overstock items, total inventory value',
         },
         'sdm': {
-            'focus': 'fokus pada kinerja karyawan, turnover rate, kepuasan kerja, absensi, dan demografi SDM.',
-            'metrics': 'turnover rate, absensi, skor kinerja, kepuasan karyawan, distribusi departemen',
-            'business_questions': [
-                'Bagaimana tingkat turnover karyawan?',
-                'Departemen mana yang paling produktif?',
-                'Ada pola absensi yang mengkhawatirkan?',
-                'Bagaimana distribusi skor kinerja?',
-                'Apakah ada korelasi antara masa kerja dan performa?'
-            ]
+            'focus': 'kinerja karyawan, turnover rate, distribusi kompensasi, dan workforce analytics.',
+            'metrics': 'turnover rate, avg performance score, salary distribution, headcount per dept',
         },
         'akademik': {
-            'focus': 'fokus pada performa akademik, distribusi nilai, tingkat kelulusan, dan tren per mata pelajaran/kelas.',
-            'metrics': 'nilai rata-rata, distribusi grade, tingkat kelulusan, perbandingan antar kelas',
-            'business_questions': [
-                'Mata pelajaran mana dengan rata-rata tertinggi/terendah?',
-                'Bagaimana distribusi nilai (A/B/C/D/E)?',
-                'Berapa tingkat kelulusan?',
-                'Ada tren perbaikan atau penurunan antar periode?',
-                'Kelas mana yang butuh perhatian khusus?'
-            ]
+            'focus': 'performa akademik, distribusi nilai, gap analysis, dan tren per periode.',
+            'metrics': 'average grade, pass rate, grade distribution, subject comparison',
         },
         'kesehatan': {
-            'focus': 'fokus pada data pasien, prevalensi penyakit, tren kesehatan, dan indikator klinis.',
-            'metrics': 'jumlah kasus, prevalensi, rata-rata indikator klinis, distribusi diagnosa',
-            'business_questions': [
-                'Diagnosa apa yang paling umum?',
-                'Bagaimana tren kunjungan pasien?',
-                'Ada pola musiman pada kasus tertentu?',
-                'Bagaimana distribusi usia dan gender pasien?',
-                'Indikator klinis mana yang perlu diperhatikan?'
-            ]
+            'focus': 'prevalensi penyakit, demografi pasien, tren kunjungan, dan indikator klinis.',
+            'metrics': 'top diagnoses, age/gender distribution, vital sign averages, visit trends',
         },
         'logistik': {
-            'focus': 'fokus pada efisiensi pengiriman, lead time, biaya transportasi, dan ketepatan waktu.',
-            'metrics': 'on-time delivery rate, average lead time, biaya per pengiriman, volume pengiriman',
-            'business_questions': [
-                'Berapa persen pengiriman tepat waktu?',
-                'Rute mana yang paling efisien/mahal?',
-                'Bagaimana tren volume pengiriman?',
-                'Ada bottleneck di proses mana?',
-                'Bagaimana perbandingan biaya antar kurir/jalur?'
-            ]
+            'focus': 'efisiensi pengiriman, on-time delivery, biaya transportasi, dan route optimization.',
+            'metrics': 'OTD rate, avg delivery time, cost per shipment, top routes',
         },
         'survey': {
-            'focus': 'fokus pada distribusi jawaban, sentimen responden, korelasi antar variabel, dan insight kualitatif.',
-            'metrics': 'distribusi jawaban, skor rata-rata per kategori, net promoter score, sentimen',
-            'business_questions': [
-                'Bagaimana distribusi jawaban per pertanyaan?',
-                'Aspek mana yang paling positif/negatif?',
-                'Ada korelasi antar variabel?',
-                'Bagaimana segmentasi responden?',
-                'Apa rekomendasi berdasarkan feedback?'
-            ]
+            'focus': 'distribusi jawaban, sentimen, NPS, dan korelasi antar variabel survei.',
+            'metrics': 'avg rating, NPS, satisfaction distribution, top/bottom aspects',
         },
         'umum': {
-            'focus': 'analisis deskriptif umum dari data dengan insight yang relevan.',
-            'metrics': 'ringkasan statistik deskriptif',
-            'business_questions': [
-                'Apa pola utama dalam data?',
-                'Ada insight menarik apa?',
-                'Statistik apa yang paling menonjol?',
-                'Rekomendasi apa yang bisa diberikan?'
-            ]
+            'focus': 'pola utama, distribusi data, korelasi antar variabel, dan anomali yang ditemukan.',
+            'metrics': 'deskriptif statistik, distribusi, korelasi, outlier',
         }
     }
 
-    # Tone instructions
     TONE_INSTRUCTIONS = {
-        'formal': '''
-Gunakan bahasa formal dan profesional. Hindari slang atau bahasa gaul. Gunakan struktur kalimat yang lengkap dan rapi. Cocok untuk laporan eksekutif atau presentasi bisnis.
-''',
-        'santai': '''
-Gunakan bahasa yang santai dan mudah dipahami. Boleh menggunakan analogi sederhana. Hindari istilah teknis yang berlebihan. Cocok untuk pembaca awam atau briefing cepat.
-''',
-        'teknis': '''
-Gunakan bahasa teknis dan presisi. Sebutkan metrik spesifik, rumus, atau terminologi domain yang relevan. Asumsikan pembaca memiliki pengetahuan teknis. Cocok untuk analisis mendalam atau report teknis.
-''',
-        'eksekutif': '''
-Tulis ringkas dan langsung ke inti. Fokus pada KPI, bottom-line impact, dan rekomendasi strategis. Gunakan bullet points sebanyak mungkin. Buat pembaca bisa memahami situasi dalam 1 menit. Cocok untuk CEO, direktur, atau stakeholder yang sibuk.
-''',
-        'storytelling': '''
-Tulis seperti cerita dengan alur naratif yang mengalir. Gunakan data sebagai "plot point" dan bangun tension/klimaks di insight utama. Buat pembaca merasa sedang mengikuti sebuah perjalanan penemuan. Cocok untuk presentasi ke audiens non-teknis agar data terasa hidup dan menarik.
-''',
-        'akademis': '''
-Gunakan gaya penulisan ilmiah/akademis. Sertakan referensi metodologi analisis, confidence level, dan batasan (limitations) dari analisis ini. Gunakan terminologi statistik yang tepat (mean, median, standar deviasi, distribusi). Sebutkan asumsi yang digunakan. Cocok untuk skripsi, jurnal, tugas kuliah, atau laporan penelitian.
-'''
+        'formal': 'Gunakan bahasa formal dan profesional. Struktur kalimat lengkap dan rapi. Cocok untuk laporan eksekutif.',
+        'santai': 'Gunakan bahasa santai dan mudah dipahami. Boleh gunakan analogi sederhana. Cocok untuk briefing cepat.',
+        'teknis': 'Gunakan bahasa teknis dan presisi. Sebutkan metrik spesifik, terminologi domain. Cocok untuk report teknis.',
+        'eksekutif': 'Tulis ringkas dan langsung ke inti. Fokus KPI, bottom-line impact, rekomendasi strategis. Format bullet points.',
+        'storytelling': 'Tulis seperti cerita dengan alur naratif. Data sebagai plot point. Bangun tension di insight utama.',
+        'akademis': 'Gaya penulisan ilmiah. Sertakan metodologi, confidence level, batasan analisis. Terminologi statistik tepat.',
     }
 
     def build(self, stats: Dict, cleaning_log: Dict, tone: str = 'formal') -> Tuple[str, str]:
-        """
-        Build prompt untuk AI
-
-        Args:
-            stats: Hasil analisis dari DataAnalyzer
-            cleaning_log: Log pembersihan data
-            tone: Tone narasi (formal, santai, teknis, eksekutif, storytelling, akademis)
-
-        Returns:
-            Tuple of (system_prompt, user_prompt)
-        """
         analysis_type = stats.get('analysis_type', 'umum')
         focus_info = self.ANALYSIS_FOCUS.get(analysis_type, self.ANALYSIS_FOCUS['umum'])
-        tone_instruction = self.TONE_INSTRUCTIONS.get(tone, self.TONE_INSTRUCTIONS['formal'])
+        tone_inst = self.TONE_INSTRUCTIONS.get(tone, self.TONE_INSTRUCTIONS['formal'])
 
-        # System Prompt
-        system_prompt = f"""ANDA ASISTEN AI ANALISIS DATA BAHASA INDONESIA
+        system_prompt = f"""ANDA ADALAH ANALIS DATA SENIOR BERBAHASA INDONESIA
 
-Peran:
-Anda adalah asisten AI spesialis yang bertugas menganalisis data dan membuat narasi insight bisnis dalam Bahasa Indonesia yang jelas, informatif, dan mudah dipahami.
+PERAN: Anda analis data senior yang menghasilkan insight bisnis berkualitas tinggi dari data statistik. Anda menganalisis dengan kedalaman setara konsultan McKinsey/BCG — bukan sekadar membaca angka, tapi menginterpretasi makna bisnis di baliknya.
 
-Aturan Bahasa:
-1. Jawab HANYA dalam Bahasa Indonesia - tidak ada bahasa lain sama sekali
-2. Jangan gunakan karakter CJK (Hanzi, Kanji, dll) - ini anti-Mandarin untuk GLM
-3. Gunakan struktur kalimat yang jelas dengan paragraf yang terorganisir
-4. Sebutkan minimal 1 angka/statistik dalam narasi
-5. Jangan mulai dengan "Berikut", "Tentu", "Baik" - langsung ke konten saja
-6. Berikan insight yang actionable (bisa ditindaklanjuti)
+ATURAN KETAT:
+1. Jawab HANYA dalam Bahasa Indonesia — tidak ada bahasa lain
+2. JANGAN gunakan karakter CJK (Hanzi/Kanji)
+3. JANGAN mulai dengan "Berikut", "Tentu", "Baik" — langsung ke konten
+4. Setiap klaim HARUS didukung angka spesifik dari data
+5. Bandingkan mean vs median — jika gap besar, jelaskan implikasi (distribusi skewed)
+6. Identifikasi anomali, outlier, dan pola yang tidak biasa
+7. Berikan rekomendasi yang ACTIONABLE dan SPESIFIK
 
-Tone Narasi:
-{tone_instruction}
+KUALITAS INSIGHT YANG DIHARAPKAN:
+- Jangan hanya menyebut "penjualan naik" — sebutkan berapa persen, dari berapa ke berapa
+- Jangan hanya menyebut "ada outlier" — jelaskan dampaknya terhadap rata-rata
+- Bandingkan antar kategori/segmen — mana yang overperform vs underperform
+- Identifikasi pola temporal (musiman, tren naik/turun, anomali periode tertentu)
+- Jika ada korelasi kuat, jelaskan implikasi bisnis/praktisnya
 
-Output Format:
-- Narasi dengan 3-5 paragraf
-- Setiap paragraf memiliki fokus yang berbeda
-- Gunakan bullet points untuk list jika perlu
-- Sebutkan angka/spesifik untuk mendukung insight
-- Berikan rekomendasi actionable di akhir jika relevan
-"""
+TONE: {tone_inst}
 
-        # User Prompt
-        user_prompt = f"""## KONTEKS DATASET
+FORMAT OUTPUT (5-8 paragraf):
+1. **Overview & Ringkasan Eksekutif** — gambaran besar dataset dan temuan utama
+2. **Analisis Tren & Pola** — temporal trends, seasonal patterns, growth rates
+3. **Breakdown per Segmen/Kategori** — perbandingan antar kelompok, siapa yang dominan
+4. **Distribusi & Anomali** — skewness, outlier, gap mean-median, data quality issues
+5. **Korelasi & Hubungan Antar Variabel** — apa yang saling mempengaruhi
+6. **Rekomendasi Strategis** — minimal 3 actionable recommendations dengan konteks data
 
-Saya baru saja menganalisis dataset {analysis_type} dengan total {stats.get('basic_stats', {}).get('total_rows', 0)} baris data.
+Gunakan bullet points, angka spesifik, dan persentase. Setiap paragraf minimal 3 kalimat."""
 
-## HASIL KALKULASI STATISTIK
-
-### Statistik Dasar:
-- Total baris: {stats.get('basic_stats', {}).get('total_rows', 0)}
-- Total kolom: {stats.get('basic_stats', {}).get('total_columns', 0)}
-- Kolom numerik: {stats.get('basic_stats', {}).get('numeric_columns', 0)}
-- Kolom kategorik: {stats.get('basic_stats', {}).get('string_columns', 0)}
-
-### Informasi Pembersihan Data:
-- Baris awal: {cleaning_log.get('original_rows', 0)}
-- Baris akhir: {cleaning_log.get('final_rows', 0)}
-- Duplikat dihapus: {cleaning_log.get('duplicates_removed', 0)}
-- Anomali yang ditandai: {len(cleaning_log.get('anomalies_flagged', []))}
-
-## FOKUS ANALISIS
-
-{focus_info['focus'].capitalize()}
-
-Metrik yang dianalisis: {focus_info['metrics']}
-
-Pertanyaan bisnis untuk dijawab:
-{self._format_questions(focus_info['business_questions'])}
-
-## INSTRUKSI OUTPUT
-
-Buat narasi analisis dalam Bahasa Indonesia dengan:
-1. 3-5 paragraf yang terstruktur
-2. Setiap paragraf fokus pada aspek berbeda
-3. Sebutkan angka konkret untuk dukung insight
-4. Berikan insight yang actionable dan relevan
-5. Tone: {tone}
-
-JANGAN SEBUT KALIMAT "Berikut", "Tentu", "Baik", dll. Langsung mulai konten.
-"""
-
-        logger.info("Prompt built successfully")
-
+        # Build data-rich user prompt
+        user_prompt = self._build_user_prompt(stats, cleaning_log, analysis_type, focus_info)
+        logger.info("Prompt built successfully (data-rich v2)")
         return system_prompt, user_prompt
 
-    def _format_questions(self, questions: list) -> str:
-        """Format list pertanyaan untuk prompt"""
-        formatted = []
-        for i, q in enumerate(questions, 1):
-            formatted.append(f"{i}. {q}")
-        return '\n'.join(formatted)
+    def _build_user_prompt(self, stats: Dict, cleaning_log: Dict, analysis_type: str, focus_info: Dict) -> str:
+        basic = stats.get('basic_stats', {})
+        enriched = stats.get('enriched', {})
+        column_info = stats.get('column_info', {})
+
+        sections = []
+
+        # Section 1: Dataset overview
+        sections.append(f"""## KONTEKS DATASET
+Tipe analisis: {analysis_type}
+Total baris: {basic.get('total_rows', 0):,}
+Total kolom: {basic.get('total_columns', 0)}
+Kolom numerik: {basic.get('numeric_columns', 0)}
+Kolom kategorik: {basic.get('string_columns', 0)}
+Memory: {basic.get('memory_usage_mb', 0)} MB""")
+
+        # Section 2: Cleaning summary
+        sections.append(f"""## PEMBERSIHAN DATA
+Baris awal: {cleaning_log.get('original_rows', 0):,}
+Baris akhir: {cleaning_log.get('final_rows', 0):,}
+Duplikat dihapus: {cleaning_log.get('duplicates_removed', 0)}
+Baris kosong dihapus: {cleaning_log.get('empty_rows_removed', 0)}
+Total masalah: {cleaning_log.get('total_issues_found', 0)}""")
+
+        # Null details
+        nulls = cleaning_log.get('nulls_filled', {})
+        if nulls:
+            null_lines = []
+            for col, info in list(nulls.items())[:8]:
+                null_lines.append(f"- {col}: {info.get('count', 0)} null → {info.get('method', '?')} ({info.get('value', '?')})")
+            sections.append("### Nilai Kosong yang Diisi:\n" + "\n".join(null_lines))
+
+        # Section 3: Column statistics with enriched data
+        num_stats_lines = []
+        for col, info in column_info.items():
+            if info.get('is_numeric'):
+                line = f"- **{col}**: min={info.get('min')}, max={info.get('max')}, mean={info.get('mean')}, median={info.get('median')}, std={info.get('std')}"
+                if info.get('skewness') is not None:
+                    line += f", skewness={info['skewness']}"
+                if info.get('distribution'):
+                    line += f" [{info['distribution']}]"
+                if info.get('outlier_count', 0) > 0:
+                    line += f", {info['outlier_count']} outlier"
+                if info.get('mean_median_ratio') and abs(info['mean_median_ratio'] - 1) > 0.3:
+                    line += f" ⚠️ mean/median ratio={info['mean_median_ratio']} (distribusi tidak simetris!)"
+                num_stats_lines.append(line)
+        if num_stats_lines:
+            sections.append("## STATISTIK KOLOM NUMERIK\n" + "\n".join(num_stats_lines[:10]))
+
+        # Section 4: Categorical top values
+        cat_lines = []
+        for col, info in column_info.items():
+            if not info.get('is_numeric') and info.get('top_values'):
+                top = info['top_values']
+                vals = ", ".join([f"{k}: {v}" for k, v in list(top.items())[:5]])
+                cat_lines.append(f"- **{col}** ({info.get('unique_count', 0)} unique): {vals}")
+        if cat_lines:
+            sections.append("## DISTRIBUSI KOLOM KATEGORIK\n" + "\n".join(cat_lines[:8]))
+
+        # Section 5: Enriched — temporal trends
+        yearly = enriched.get('yearly_trend', [])
+        if yearly:
+            trend_lines = []
+            for i, yr in enumerate(yearly):
+                line = f"- {yr['year']}: total={yr['total']:,.2f}, count={yr['count']}, avg={yr['avg']:,.2f}"
+                if i > 0:
+                    prev = yearly[i-1]['total']
+                    if prev > 0:
+                        growth = (yr['total'] - prev) / prev * 100
+                        line += f" ({'↑' if growth > 0 else '↓'} {growth:+.1f}%)"
+                trend_lines.append(line)
+            sections.append("## TREN TEMPORAL (TAHUNAN)\n" + "\n".join(trend_lines))
+            if enriched.get('peak_month'):
+                sections.append(f"Peak month: {enriched['peak_month']} (nilai: {enriched.get('peak_month_value', 0):,.2f})")
+
+        # Section 6: Enriched — categorical breakdowns
+        for key, val in enriched.items():
+            if key.endswith('_breakdown') and isinstance(val, list):
+                cat_name = key.replace('_breakdown', '')
+                bd_lines = []
+                for item in val[:10]:
+                    bd_lines.append(f"- {item['label']}: total={item['total']:,.2f} ({item['pct']:.1f}%), count={item['count']}, avg={item['avg']:,.2f}")
+                sections.append(f"## BREAKDOWN: {cat_name.upper()}\n" + "\n".join(bd_lines))
+
+        # Section 7: Correlations
+        corrs = enriched.get('correlations', [])
+        if corrs:
+            corr_lines = []
+            for c in corrs[:5]:
+                direction = "positif" if c['r'] > 0 else "NEGATIF"
+                strength = "kuat" if abs(c['r']) > 0.7 else ("sedang" if abs(c['r']) > 0.4 else "lemah")
+                corr_lines.append(f"- {c['col1']} × {c['col2']}: r={c['r']} ({direction}, {strength})")
+            sections.append("## KORELASI ANTAR VARIABEL\n" + "\n".join(corr_lines))
+
+        # Section 8: Outlier summary
+        outliers = enriched.get('outlier_summary', [])
+        if outliers:
+            out_lines = []
+            for o in outliers[:5]:
+                out_lines.append(f"- {o['column']}: {o['count']} outlier ({o['pct']:.1f}%), max={o['max_outlier']:,.2f}")
+            sections.append("## OUTLIER TERDETEKSI (IQR)\n" + "\n".join(out_lines))
+
+        # Section 9: Domain-specific insights (from analyzer)
+        domain_keys = ['sales_insights', 'finance_insights', 'operational_insights',
+                       'marketing_insights', 'inventory_insights', 'sdm_insights',
+                       'akademik_insights', 'kesehatan_insights', 'logistik_insights',
+                       'survey_insights', 'generic_insights']
+        for dk in domain_keys:
+            if dk in stats and stats[dk]:
+                sections.append(f"## INSIGHT DOMAIN ({dk.upper()})\n{json.dumps(stats[dk], indent=2, default=str)[:2000]}")
+                break
+
+        # Section 10: Focus instruction
+        sections.append(f"""## FOKUS ANALISIS
+{focus_info['focus']}
+Metrik kunci: {focus_info['metrics']}
+
+## INSTRUKSI
+Buat narasi analisis mendalam dalam Bahasa Indonesia. GUNAKAN SEMUA DATA DI ATAS.
+Sebutkan angka spesifik, persentase, perbandingan. Identifikasi anomali dan pola.
+Berikan minimal 3 rekomendasi strategis yang actionable berdasarkan temuan data.""")
+
+        return "\n\n".join(sections)
 
 
 if __name__ == "__main__":
-    # Test
     builder = PromptBuilder()
     stats = {
-        'basic_stats': {
-            'total_rows': 100,
-            'total_columns': 5,
-            'numeric_columns': 3,
-            'string_columns': 2
-        },
-        'analysis_type': 'penjualan'
+        'basic_stats': {'total_rows': 9800, 'total_columns': 18, 'numeric_columns': 5, 'string_columns': 13},
+        'analysis_type': 'penjualan',
+        'column_info': {},
+        'enriched': {},
     }
-    cleaning_log = {
-        'original_rows': 100,
-        'final_rows': 95,
-        'duplicates_removed': 5
-    }
-
+    cleaning_log = {'original_rows': 9800, 'final_rows': 9800, 'duplicates_removed': 0}
     system, user = builder.build(stats, cleaning_log, 'formal')
-    print("=== SYSTEM PROMPT ===")
-    print(system)
-    print("\n=== USER PROMPT ===")
-    print(user)
+    print(f"System: {len(system)} chars")
+    print(f"User: {len(user)} chars")

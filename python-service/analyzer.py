@@ -41,7 +41,8 @@ class DataAnalyzer:
             'basic_stats': self._basic_stats(df),
             'column_info': self._column_info(df),
             'analysis_type': analysis_type,
-            'insights': []
+            'insights': [],
+            'enriched': self._enriched_stats(df),
         }
 
         method_map = {
@@ -94,11 +95,119 @@ class DataAnalyzer:
                 col_info['mean'] = round(float(s.mean()), 2) if not s.empty else None
                 col_info['median'] = round(float(s.median()), 2) if not s.empty else None
                 col_info['std'] = round(float(s.std()), 2) if len(s) > 1 else None
+                # Enriched: skewness, outlier count, distribution shape
+                if len(s) > 3:
+                    skew = float(s.skew())
+                    col_info['skewness'] = round(skew, 2)
+                    q1, q3 = s.quantile(0.25), s.quantile(0.75)
+                    iqr = q3 - q1
+                    outliers = ((s < q1 - 1.5 * iqr) | (s > q3 + 1.5 * iqr)).sum()
+                    col_info['outlier_count'] = int(outliers)
+                    col_info['mean_median_ratio'] = round(float(s.mean()) / max(float(s.median()), 0.001), 2)
+                    if abs(skew) < 0.5:
+                        col_info['distribution'] = 'normal'
+                    elif skew > 1.5:
+                        col_info['distribution'] = 'highly_right_skewed'
+                    elif skew > 0.5:
+                        col_info['distribution'] = 'right_skewed'
+                    elif skew < -1.5:
+                        col_info['distribution'] = 'highly_left_skewed'
+                    else:
+                        col_info['distribution'] = 'left_skewed'
             else:
                 col_info['is_numeric'] = False
                 col_info['sample_values'] = df[col].dropna().head(5).tolist()
+                # Top value counts for categorical
+                top = df[col].value_counts().head(5)
+                col_info['top_values'] = {str(k): int(v) for k, v in top.items()}
             column_info[col] = col_info
         return column_info
+
+    def _enriched_stats(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Compute enriched statistics for prompt builder"""
+        enriched = {}
+        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        cat_cols = df.select_dtypes(include=['object']).columns.tolist()
+
+        # Top correlations
+        if len(num_cols) >= 2:
+            try:
+                corr = df[num_cols].corr()
+                pairs = []
+                for i in range(len(num_cols)):
+                    for j in range(i + 1, len(num_cols)):
+                        v = corr.iloc[i, j]
+                        if not np.isnan(v):
+                            pairs.append({'col1': num_cols[i], 'col2': num_cols[j], 'r': round(float(v), 3)})
+                pairs.sort(key=lambda x: abs(x['r']), reverse=True)
+                enriched['correlations'] = pairs[:8]
+            except:
+                pass
+
+        # Temporal trend (yearly/monthly if date col exists)
+        date_cols = _find_cols(df, ['tanggal', 'date', 'time', 'tgl', 'order_date', 'ship_date'])
+        if date_cols and num_cols:
+            try:
+                dc = date_cols[0]
+                df_t = df.copy()
+                df_t[dc] = pd.to_datetime(df_t[dc], errors='coerce')
+                df_t = df_t.dropna(subset=[dc])
+                nc = num_cols[0]
+                # Yearly
+                yearly = df_t.groupby(df_t[dc].dt.year)[nc].agg(['sum', 'count', 'mean']).reset_index()
+                yearly.columns = ['year', 'total', 'count', 'avg']
+                trend_data = []
+                for _, row in yearly.iterrows():
+                    trend_data.append({'year': int(row['year']), 'total': round(float(row['total']), 2), 'count': int(row['count']), 'avg': round(float(row['avg']), 2)})
+                enriched['yearly_trend'] = trend_data
+                # Monthly
+                monthly = df_t.groupby(df_t[dc].dt.to_period('M'))[nc].sum()
+                peak_month = monthly.idxmax()
+                enriched['peak_month'] = str(peak_month)
+                enriched['peak_month_value'] = round(float(monthly.max()), 2)
+            except Exception as e:
+                logger.warning(f"Temporal trend failed: {e}")
+
+        # Categorical breakdown with numeric aggregation
+        if cat_cols and num_cols:
+            nc = num_cols[0]
+            for cc in cat_cols[:2]:
+                if df[cc].nunique() <= 20:
+                    try:
+                        grp = df.groupby(cc)[nc].agg(['sum', 'count', 'mean']).sort_values('sum', ascending=False).head(10)
+                        breakdown = []
+                        total_sum = df[nc].sum()
+                        for idx, row in grp.iterrows():
+                            breakdown.append({
+                                'label': str(idx),
+                                'total': round(float(row['sum']), 2),
+                                'count': int(row['count']),
+                                'avg': round(float(row['mean']), 2),
+                                'pct': round(float(row['sum'] / max(total_sum, 1) * 100), 1)
+                            })
+                        enriched[f'{cc}_breakdown'] = breakdown
+                    except:
+                        pass
+
+        # Outlier summary
+        outlier_summary = []
+        for nc in num_cols[:6]:
+            s = df[nc].dropna()
+            if len(s) > 10:
+                q1, q3 = s.quantile(0.25), s.quantile(0.75)
+                iqr = q3 - q1
+                extreme = s[(s < q1 - 1.5 * iqr) | (s > q3 + 1.5 * iqr)]
+                if len(extreme) > 0:
+                    outlier_summary.append({
+                        'column': nc, 'count': len(extreme),
+                        'pct': round(len(extreme) / len(s) * 100, 1),
+                        'max_outlier': round(float(extreme.max()), 2),
+                        'min_outlier': round(float(extreme.min()), 2),
+                    })
+        if outlier_summary:
+            enriched['outlier_summary'] = outlier_summary
+
+        return enriched
 
     # ─── PENJUALAN ───
     def _analyze_sales(self, df: pd.DataFrame) -> Dict[str, Any]:

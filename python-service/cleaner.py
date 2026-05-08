@@ -124,6 +124,37 @@ class DataCleaner:
             })
 
             # ═══════════════════════════════════════════
+            # Step 3.5: Standardisasi nama kolom
+            # ═══════════════════════════════════════════
+            logger.info("Step 3.5: Standardizing column names...")
+            original_col_names = list(df.columns)
+            new_col_names = []
+            renamed_cols = []
+            for col in df.columns:
+                import re as _re
+                new_name = col.strip()
+                new_name = new_name.replace(' ', '_').replace('-', '_')
+                new_name = _re.sub(r'[^a-zA-Z0-9_]', '', new_name)
+                new_name = _re.sub(r'_+', '_', new_name).strip('_')
+                if not new_name:
+                    new_name = f'col_{len(new_col_names)}'
+                new_col_names.append(new_name)
+                if new_name != col:
+                    renamed_cols.append(f'{col} → {new_name}')
+            df.columns = new_col_names
+
+            cleaning_log['cleaning_steps'].append({
+                'step': 3.5,
+                'action': 'Standardisasi Nama Kolom',
+                'description': f'{len(renamed_cols)} kolom di-rename ke format standar' if renamed_cols else 'Nama kolom sudah standar',
+                'impact': 'low' if renamed_cols else 'none',
+                'affected_rows': 0,
+                'affected_columns': renamed_cols[:10],
+                'detail': '; '.join(renamed_cols[:8]) if renamed_cols else 'Semua nama kolom sudah bersih (tidak ada spasi atau karakter khusus).'
+            })
+            original_cols = list(df.columns)  # update reference
+
+            # ═══════════════════════════════════════════
             # Step 4: Hapus baris yang SEMUA kolomnya kosong
             # ═══════════════════════════════════════════
             logger.info("Step 4: Removing empty rows...")
@@ -161,6 +192,27 @@ class DataCleaner:
                 'affected_rows': duplicates_removed,
                 'affected_columns': original_cols if duplicates_removed > 0 else [],
                 'detail': f'Baris yang semua kolomnya sama persis (exact match) dianggap duplikat. {duplicates_removed} baris dihapus ({duplicates_removed/before_count*100:.1f}% dari data).' if duplicates_removed > 0 else 'Setiap baris unik, tidak ada duplikasi data.'
+            })
+
+            # ═══════════════════════════════════════════
+            # Step 5.5: Deteksi kolom zero-variance
+            # ═══════════════════════════════════════════
+            logger.info("Step 5.5: Detecting zero-variance columns...")
+            zero_var_cols = []
+            for col in df.columns:
+                if df[col].nunique() <= 1:
+                    zero_var_cols.append(col)
+            # Don't drop — just flag for awareness
+            cleaning_log['zero_variance_columns'] = zero_var_cols
+
+            cleaning_log['cleaning_steps'].append({
+                'step': 5.5,
+                'action': 'Deteksi Kolom Konstan',
+                'description': f'{len(zero_var_cols)} kolom hanya memiliki 1 nilai unik (tidak informatif)' if zero_var_cols else 'Semua kolom memiliki variasi data',
+                'impact': 'medium' if zero_var_cols else 'none',
+                'affected_rows': len(df) if zero_var_cols else 0,
+                'affected_columns': zero_var_cols,
+                'detail': f'Kolom dengan 1 nilai: {", ".join(zero_var_cols[:5])}. Kolom ini tidak memberikan informasi analitis karena isinya identik di semua baris.' if zero_var_cols else 'Setiap kolom memiliki variasi nilai yang cukup untuk analisis.'
             })
 
             # ═══════════════════════════════════════════
@@ -210,33 +262,78 @@ class DataCleaner:
             })
 
             # ═══════════════════════════════════════════
-            # Step 7: Handle nilai negatif di kolom numeric
+            # Step 6.5: Clean invalid characters
             # ═══════════════════════════════════════════
-            logger.info("Step 7: Flagging negative values...")
+            logger.info("Step 6.5: Cleaning invalid characters...")
+            import re as _re2
+            invalid_char_cols = []
+            string_cols_v2 = df.select_dtypes(include=['object']).columns
+            for col in string_cols_v2:
+                # Fix encoding artifacts: â€™ → ', â€œ → ", etc
+                original_vals = df[col].copy()
+                df[col] = df[col].astype(str).str.replace(r'â€™', "'", regex=False)
+                df[col] = df[col].str.replace(r'â€œ', '"', regex=False)
+                df[col] = df[col].str.replace(r'â€\x9d', '"', regex=False)
+                # Remove non-printable chars (except newline/tab)
+                df[col] = df[col].str.replace(r'[^\x20-\x7E\xA0-\xFF\n\t]', '', regex=True)
+                if not df[col].equals(original_vals):
+                    invalid_char_cols.append(col)
+
+            cleaning_log['cleaning_steps'].append({
+                'step': 6.5,
+                'action': 'Bersihkan Karakter Invalid',
+                'description': f'Karakter non-printable dan encoding artifacts dibersihkan dari {len(invalid_char_cols)} kolom' if invalid_char_cols else 'Tidak ditemukan karakter invalid',
+                'impact': 'low' if invalid_char_cols else 'none',
+                'affected_rows': len(df) if invalid_char_cols else 0,
+                'affected_columns': invalid_char_cols,
+                'detail': f'Kolom yang dibersihkan: {", ".join(invalid_char_cols[:5])}. Encoding artifacts (â€™, â€œ, dll) dikonversi ke karakter standar.' if invalid_char_cols else 'Semua data teks sudah bersih dari karakter invalid.'
+            })
+
+            # ═══════════════════════════════════════════
+            # Step 7: Deteksi Anomali & Outlier (IQR method)
+            # ═══════════════════════════════════════════
+            logger.info("Step 7: Detecting anomalies and outliers (IQR)...")
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             anomaly_details = []
             for col in numeric_cols:
-                negative_count = (df[col] < 0).sum()
+                s = df[col].dropna()
+                if len(s) < 10:
+                    continue
+                # Negative value check
+                negative_count = (s < 0).sum()
                 if negative_count > 0:
-                    anomalies = {
-                        'column': col,
-                        'issue': 'negative_values',
+                    cleaning_log['anomalies_flagged'].append({
+                        'column': col, 'issue': 'negative_values',
                         'count': int(negative_count),
                         'percentage': f"{(negative_count/len(df)*100):.2f}%",
                         'sample_values': df[df[col] < 0][col].head(3).tolist()
-                    }
-                    cleaning_log['anomalies_flagged'].append(anomalies)
-                    anomaly_details.append(f'{col}: {negative_count} nilai negatif ({anomalies["percentage"]})')
-                    logger.info(f"Flagged {negative_count} negative values in {col}")
+                    })
+                    anomaly_details.append(f'{col}: {negative_count} nilai negatif')
+                # IQR outlier detection
+                q1, q3 = s.quantile(0.25), s.quantile(0.75)
+                iqr = q3 - q1
+                if iqr > 0:
+                    lower = q1 - 1.5 * iqr
+                    upper = q3 + 1.5 * iqr
+                    outlier_count = int(((s < lower) | (s > upper)).sum())
+                    if outlier_count > 0:
+                        cleaning_log['anomalies_flagged'].append({
+                            'column': col, 'issue': 'iqr_outliers',
+                            'count': outlier_count,
+                            'percentage': f"{(outlier_count/len(s)*100):.2f}%",
+                            'bounds': f'[{lower:,.2f}, {upper:,.2f}]',
+                            'sample_values': s[(s < lower) | (s > upper)].head(3).tolist()
+                        })
+                        anomaly_details.append(f'{col}: {outlier_count} outlier (IQR bounds: {lower:,.1f} – {upper:,.1f})')
 
             cleaning_log['cleaning_steps'].append({
                 'step': 7,
-                'action': 'Deteksi Anomali',
-                'description': f'{len(anomaly_details)} kolom memiliki nilai negatif yang mencurigakan' if anomaly_details else 'Tidak ditemukan anomali nilai negatif',
+                'action': 'Deteksi Anomali & Outlier',
+                'description': f'{len(anomaly_details)} masalah terdeteksi (nilai negatif + IQR outlier)' if anomaly_details else 'Tidak ditemukan anomali',
                 'impact': 'high' if any(a['count'] > len(df) * 0.1 for a in cleaning_log['anomalies_flagged']) else ('medium' if anomaly_details else 'none'),
                 'affected_rows': sum(a['count'] for a in cleaning_log['anomalies_flagged']),
-                'affected_columns': [a['column'] for a in cleaning_log['anomalies_flagged']],
-                'detail': '; '.join(anomaly_details) if anomaly_details else 'Semua nilai numerik berada dalam rentang wajar (≥ 0). Tidak ada anomali terdeteksi.'
+                'affected_columns': list(set(a['column'] for a in cleaning_log['anomalies_flagged'])),
+                'detail': '; '.join(anomaly_details) if anomaly_details else 'Semua nilai numerik berada dalam rentang wajar. Tidak ada outlier terdeteksi berdasarkan metode IQR (Q1-1.5×IQR, Q3+1.5×IQR).'
             })
 
             # ═══════════════════════════════════════════
