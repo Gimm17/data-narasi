@@ -71,6 +71,15 @@ class NvidiaProvider(BaseAIProvider):
 
             narrative = response.choices[0].message.content
 
+            # Capture real token usage
+            if response.usage:
+                self._last_usage = {
+                    'prompt_tokens': response.usage.prompt_tokens or 0,
+                    'completion_tokens': response.usage.completion_tokens or 0,
+                    'total_tokens': response.usage.total_tokens or 0,
+                    'model_used': active_model,
+                }
+
             # Validate
             if not self.validate_narrative(narrative):
                 raise ValueError("Generated narrative tidak memenuhi kriteria validasi")

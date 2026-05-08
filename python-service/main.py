@@ -348,7 +348,13 @@ def _process_report_background(request: ProcessRequest):
             'clean_rows': len(clean_result['df']),
             'ai_provider_used': narrative_result['provider_used'],
             'processing_time_ms': narrative_result.get('processing_time_ms'),
-            'ai_usage_logs': narrative_result.get('logs', [])
+            'ai_usage_logs': narrative_result.get('logs', []),
+            # Token & cost data
+            'prompt_tokens': narrative_result.get('prompt_tokens', 0),
+            'completion_tokens': narrative_result.get('completion_tokens', 0),
+            'total_tokens': narrative_result.get('total_tokens', 0),
+            'cost_usd': narrative_result.get('cost_usd', 0.0),
+            'model_used': narrative_result.get('model_used'),
         }
 
         # Send callback ke Laravel dengan retry mechanism

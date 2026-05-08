@@ -64,6 +64,12 @@ class ReportCallbackController extends Controller
                 'ai_usage_logs' => 'nullable|array',
                 'outputs' => 'nullable|array',
                 'error_message' => 'nullable|string',
+                // Token & cost data
+                'prompt_tokens' => 'nullable|integer',
+                'completion_tokens' => 'nullable|integer',
+                'total_tokens' => 'nullable|integer',
+                'cost_usd' => 'nullable|numeric',
+                'model_used' => 'nullable|string',
             ]);
 
             // Decode dan simpan chart images dari base64 (cross-container transfer)
@@ -107,6 +113,11 @@ class ReportCallbackController extends Controller
                 'clean_rows' => $validated['clean_rows'] ?? 0,
                 'ai_provider_used' => $validated['ai_provider_used'] ?? null,
                 'processing_time_ms' => $validated['processing_time_ms'] ?? null,
+                'prompt_tokens' => $validated['prompt_tokens'] ?? null,
+                'completion_tokens' => $validated['completion_tokens'] ?? null,
+                'total_tokens' => $validated['total_tokens'] ?? null,
+                'cost_usd' => $validated['cost_usd'] ?? null,
+                'model_used' => $validated['model_used'] ?? null,
             ]);
 
             // Simpan AI usage logs jika ada
@@ -126,9 +137,10 @@ class ReportCallbackController extends Controller
                     AIUsageLog::create([
                         'report_id'       => $report->id,
                         'ai_provider_id'  => $provider->id,
-                        'prompt_length'   => 0,
-                        'response_length' => $logData['tokens_used'] ?? 0,
+                        'prompt_length'   => $logData['prompt_tokens'] ?? 0,
+                        'response_length' => $logData['completion_tokens'] ?? ($logData['tokens_used'] ?? 0),
                         'tokens_used'     => $logData['tokens_used'] ?? null,
+                        'cost'            => $logData['cost_usd'] ?? null,
                         'response_time_ms' => $logData['response_time_ms'] ?? 0,
                         'is_success'      => ($logData['status'] ?? '') === 'success',
                         'error_message'   => $logData['error_message'] ?? null,

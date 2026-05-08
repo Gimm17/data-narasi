@@ -66,6 +66,16 @@ class TokenRouterProvider(BaseAIProvider):
 
             narrative = response.choices[0].message.content
 
+            # Capture real token usage
+            if response.usage:
+                self._last_usage = {
+                    'prompt_tokens': response.usage.prompt_tokens or 0,
+                    'completion_tokens': response.usage.completion_tokens or 0,
+                    'total_tokens': response.usage.total_tokens or 0,
+                    'model_used': active_model,
+                }
+                logger.info(f"Token usage: {self._last_usage['prompt_tokens']} in + {self._last_usage['completion_tokens']} out = {self._last_usage['total_tokens']} total")
+
             # Strip <think>...</think> tags (reasoning models)
             narrative = self._strip_thinking_tags(narrative)
 

@@ -34,6 +34,11 @@ class Report extends Model
         'ai_narrative',
         'ai_provider_used',
         'processing_time_ms',
+        'prompt_tokens',
+        'completion_tokens',
+        'total_tokens',
+        'cost_usd',
+        'model_used',
         'error_message',
     ];
 
@@ -48,6 +53,10 @@ class Report extends Model
         'total_rows' => 'integer',
         'clean_rows' => 'integer',
         'processing_time_ms' => 'integer',
+        'prompt_tokens' => 'integer',
+        'completion_tokens' => 'integer',
+        'total_tokens' => 'integer',
+        'cost_usd' => 'decimal:6',
     ];
 
     /**

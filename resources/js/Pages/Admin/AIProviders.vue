@@ -23,6 +23,7 @@ const props = defineProps<{
         today_success: number
         today_errors: number
         today_tokens: number
+        today_cost: number
         today_avg_response: number | null
     }>
     todayStats: {
@@ -30,6 +31,7 @@ const props = defineProps<{
         successful_requests: number
         failed_requests: number
         total_tokens: number
+        total_cost: number
         avg_response_time: number | null
         fallback_count: number
     }
@@ -203,6 +205,13 @@ const getTodayErrorRate = (provider: any) => {
     return `${((provider.today_errors / provider.today_calls) * 100).toFixed(0)}%`
 }
 
+const formatCost = (cost: number) => {
+    if (!cost || cost === 0) return '-'
+    if (cost < 0.01) return `$${cost.toFixed(4)}`
+    if (cost < 1) return `$${cost.toFixed(3)}`
+    return `$${cost.toFixed(2)}`
+}
+
 // ── API Key Health Check ──
 const healthCheckResults = reactive<Record<number, any>>({})
 const checkingProviders = reactive<Record<number, boolean>>({})
@@ -277,6 +286,15 @@ const getHealthBadge = (providerId: number) => {
                     </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                    <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Biaya Hari Ini</div>
+                    <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
+                        'text-teal-600': todayStats.total_cost > 0,
+                        'text-gray-400': !todayStats.total_cost
+                    }">
+                        {{ formatCost(todayStats.total_cost) }}
+                    </div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Provider Aktif</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ activeProviders }} / {{ providers.length }}
@@ -301,6 +319,7 @@ const getHealthBadge = (providerId: number) => {
                                 <th class="px-4 py-2.5 text-center text-[11px] font-medium text-gray-400 uppercase">Status</th>
                                 <th class="px-4 py-2.5 text-right text-[11px] font-medium text-gray-400 uppercase">Calls</th>
                                 <th class="px-4 py-2.5 text-right text-[11px] font-medium text-gray-400 uppercase">Hari Ini</th>
+                                <th class="px-4 py-2.5 text-right text-[11px] font-medium text-gray-400 uppercase">Cost</th>
                                 <th class="px-4 py-2.5 text-center text-[11px] font-medium text-gray-400 uppercase">Error</th>
                                 <th class="px-4 py-2.5 text-right text-[11px] font-medium text-gray-400 uppercase">Terakhir</th>
                                 <th class="px-4 py-2.5 text-center text-[11px] font-medium text-gray-400 uppercase w-24">Aksi</th>
@@ -351,6 +370,14 @@ const getHealthBadge = (providerId: number) => {
                                     <span class="text-xs text-gray-700 tabular-nums">{{ provider.today_calls }}</span>
                                     <span v-if="provider.today_success > 0" class="text-[10px] text-emerald-600 ml-1">
                                         ✓{{ provider.today_success }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <span class="text-xs tabular-nums" :class="{
+                                        'text-teal-600 font-medium': provider.today_cost > 0,
+                                        'text-gray-400': !provider.today_cost
+                                    }">
+                                        {{ formatCost(provider.today_cost) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
