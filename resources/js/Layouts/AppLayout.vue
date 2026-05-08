@@ -245,10 +245,10 @@ onUnmounted(() => {
                         </template>
 
                         <template v-else>
-                            <Link :href="route('login')" class="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors">
+                            <Link :href="route('login')" class="hidden md:inline-flex text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors">
                                 Login
                             </Link>
-                            <Link :href="route('register')" class="text-sm font-medium bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+                            <Link :href="route('register')" class="hidden md:inline-flex text-sm font-medium bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
                                 Daftar
                             </Link>
                         </template>
@@ -289,6 +289,13 @@ onUnmounted(() => {
                         <Link :href="route('reports.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('reports.*') }" @click="closeMobileMenu">Riwayat Analisis</Link>
                         <Link v-if="isAdmin" :href="route('dashboard')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('dashboard') }" @click="closeMobileMenu">Dashboard Admin</Link>
                         <Link v-if="isAdmin" :href="route('admin.ai-providers.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('admin.*') }" @click="closeMobileMenu">AI Providers</Link>
+
+                        <!-- Auth links for mobile (guest) -->
+                        <template v-if="!isLoggedIn">
+                            <hr class="border-gray-100 my-2" />
+                            <Link :href="route('login')" class="mobile-nav-link" @click="closeMobileMenu">Login</Link>
+                            <Link :href="route('register')" class="mobile-nav-link text-teal-600" @click="closeMobileMenu">Daftar Akun</Link>
+                        </template>
                     </div>
                 </div>
             </Transition>
