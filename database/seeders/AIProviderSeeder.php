@@ -95,6 +95,17 @@ class AIProviderSeeder extends Seeder
                 'max_tokens' => 1024,
                 'timeout_seconds' => 60, // OpenRouter routing may add latency
             ],
+            [
+                'name' => 'TokenRouter',
+                'slug' => 'tokenrouter',
+                'model_id' => 'deepseek/deepseek-v4-pro',
+                'base_url' => 'https://api.tokenrouter.com/v1',
+                'api_key_env' => 'TOKENROUTER_API_KEY',
+                'priority' => 1, // Top priority — $200 Pro credit
+                'is_enabled' => true,
+                'max_tokens' => 1024,
+                'timeout_seconds' => 60,
+            ],
         ];
 
         foreach ($providers as $provider) {

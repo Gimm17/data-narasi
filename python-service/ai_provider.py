@@ -16,6 +16,7 @@ from providers.nvidia import NvidiaProvider
 from providers.minimax import MiniMaxProvider
 from providers.claude import ClaudeProvider
 from providers.openrouter import OpenRouterProvider
+from providers.tokenrouter import TokenRouterProvider
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class AIProviderManager:
     """
 
     # Provider order (sesuai PROMPT.md)
-    PROVIDER_ORDER = ['gemini', 'kimi', 'glm', 'nvidia', 'minimax', 'claude', 'openrouter']
+    PROVIDER_ORDER = ['gemini', 'kimi', 'glm', 'nvidia', 'minimax', 'claude', 'openrouter', 'tokenrouter']
 
     # Provider env keys
     PROVIDER_ENV_KEYS = {
@@ -37,7 +38,8 @@ class AIProviderManager:
         'nvidia': 'NVIDIA_API_KEY',
         'minimax': 'MINIMAX_API_KEY',
         'claude': 'CLAUDE_API_KEY',
-        'openrouter': 'OPENROUTER_API_KEY'
+        'openrouter': 'OPENROUTER_API_KEY',
+        'tokenrouter': 'TOKENROUTER_API_KEY'
     }
 
     # Provider classes
@@ -48,7 +50,8 @@ class AIProviderManager:
         'nvidia': NvidiaProvider,
         'minimax': MiniMaxProvider,
         'claude': ClaudeProvider,
-        'openrouter': OpenRouterProvider
+        'openrouter': OpenRouterProvider,
+        'tokenrouter': TokenRouterProvider
     }
 
     def __init__(self):
