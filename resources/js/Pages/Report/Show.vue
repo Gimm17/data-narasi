@@ -211,7 +211,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
             </div>
 
             <!-- ═══ QUICK STATS ═══ -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Total Baris</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
@@ -238,27 +238,6 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Waktu Proses</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ processingTime }}
-                    </div>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
-                    <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Token</div>
-                    <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
-                        {{ formattedTokens }}
-                    </div>
-                    <div v-if="report.total_tokens" class="text-[10px] text-gray-400 mt-0.5">
-                        {{ tokenDetail }}
-                    </div>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
-                    <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Biaya AI</div>
-                    <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
-                        'text-gray-400': formattedCost === '-',
-                        'text-teal-600': formattedCost !== '-'
-                    }">
-                        {{ formattedCost }}
-                    </div>
-                    <div v-if="report.model_used" class="text-[10px] text-gray-400 mt-0.5 truncate" :title="report.model_used">
-                        {{ report.model_used }}
                     </div>
                 </div>
             </div>
@@ -366,6 +345,32 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
             <!-- ═══ DETAILED STATS ═══ -->
             <div v-if="report.summary_stats?.column_info" class="mb-8">
                 <StatsDetailPanel :column-info="report.summary_stats.column_info" />
+            </div>
+
+            <!-- ═══ AI USAGE INFO (compact) ═══ -->
+            <div v-if="report.total_tokens || report.cost_usd" class="mb-8">
+                <div class="rounded-xl border border-gray-200 bg-white px-5 py-3.5">
+                    <div class="flex items-center justify-between flex-wrap gap-y-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">⚡ AI Usage</span>
+                        </div>
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div v-if="report.model_used" class="flex items-center gap-1.5">
+                                <span class="text-[11px] text-gray-400">Model</span>
+                                <code class="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">{{ report.model_used }}</code>
+                            </div>
+                            <div v-if="report.total_tokens" class="flex items-center gap-1.5">
+                                <span class="text-[11px] text-gray-400">Token</span>
+                                <span class="text-xs font-medium text-gray-700 tabular-nums">{{ formattedTokens }}</span>
+                                <span class="text-[10px] text-gray-400 tabular-nums">({{ tokenDetail }})</span>
+                            </div>
+                            <div v-if="formattedCost !== '-'" class="flex items-center gap-1.5">
+                                <span class="text-[11px] text-gray-400">Biaya</span>
+                                <span class="text-xs font-semibold text-teal-600 tabular-nums">{{ formattedCost }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ═══ DOWNLOADS ═══ -->
