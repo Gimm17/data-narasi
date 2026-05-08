@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import DarkToggle from '@/Components/DarkToggle.vue'
 
 const props = defineProps<{
     title?: string
@@ -71,9 +72,9 @@ onUnmounted(() => {
 <template>
     <Head :title="title" />
 
-    <div class="min-h-screen bg-gray-50 flex flex-col">
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-300">
         <!-- Topbar -->
-        <nav class="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <nav class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <!-- Logo -->
@@ -86,8 +87,8 @@ onUnmounted(() => {
                                     <line x1="12" y1="22.08" x2="12" y2="12"></line>
                                 </svg>
                             </div>
-                            <span class="text-xl font-bold text-gray-900">
-                                Data<span class="text-teal-600">Narasi</span>
+                            <span class="text-xl font-bold text-gray-900 dark:text-white">
+                                Data<span class="text-teal-600 dark:text-teal-400">Narasi</span>
                             </span>
                         </Link>
                     </div>
@@ -150,23 +151,24 @@ onUnmounted(() => {
                         </Link>
                     </div>
 
-                    <!-- Right Section: Profile -->
-                    <div class="flex items-center gap-3">
+                    <!-- Right Section: Profile + Dark Toggle -->
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <DarkToggle />
                         <template v-if="isLoggedIn">
                             <!-- Profile Dropdown -->
                             <div class="relative" ref="dropdownRef">
                                 <button
                                     @click="toggleDropdown"
-                                    class="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                                    class="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                                 >
                                     <div class="h-9 w-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
                                         {{ userInitials }}
                                     </div>
                                     <div class="text-right hidden sm:block">
-                                        <div class="text-sm font-medium text-gray-900 leading-tight">{{ userName }}</div>
-                                        <div class="text-xs text-gray-500 leading-tight">{{ isAdmin ? 'Admin' : 'User' }}</div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-tight">{{ userName }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">{{ isAdmin ? 'Admin' : 'User' }}</div>
                                     </div>
-                                    <svg class="w-4 h-4 text-gray-400 transition-transform" :class="{ 'rotate-180': showDropdown }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform" :class="{ 'rotate-180': showDropdown }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </button>
@@ -180,16 +182,16 @@ onUnmounted(() => {
                                     leave-from-class="opacity-100 scale-100 translate-y-0"
                                     leave-to-class="opacity-0 scale-95 -translate-y-1"
                                 >
-                                    <div v-if="showDropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+                                    <div v-if="showDropdown" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
                                         <!-- User Info -->
-                                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                                        <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                                             <div class="flex items-center gap-3">
                                                 <div class="h-10 w-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-semibold">
                                                     {{ userInitials }}
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ userName }}</div>
-                                                    <div class="text-xs text-gray-500">{{ userEmail }}</div>
+                                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ userName }}</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ userEmail }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -226,10 +228,10 @@ onUnmounted(() => {
                                         </div>
 
                                         <!-- Logout -->
-                                        <div class="border-t border-gray-100 py-1">
+                                        <div class="border-t border-gray-100 dark:border-gray-700 py-1">
                                             <button
                                                 @click="logout"
-                                                class="dropdown-item text-red-600 hover:bg-red-50 w-full"
+                                                class="dropdown-item text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full"
                                             >
                                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -245,7 +247,7 @@ onUnmounted(() => {
                         </template>
 
                         <template v-else>
-                            <Link :href="route('login')" class="hidden md:inline-flex text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors">
+                            <Link :href="route('login')" class="hidden md:inline-flex text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
                                 Login
                             </Link>
                             <Link :href="route('register')" class="hidden md:inline-flex text-sm font-medium bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
@@ -255,7 +257,7 @@ onUnmounted(() => {
 
                         <button
                             @click="toggleMobileMenu"
-                            class="md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-gray-100 text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
+                            class="md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
                             :aria-expanded="showMobileMenu"
                             aria-controls="mobile-navigation"
                             :aria-label="showMobileMenu ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
@@ -283,7 +285,7 @@ onUnmounted(() => {
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-2"
             >
-                <div v-if="showMobileMenu" id="mobile-navigation" class="md:hidden border-t border-gray-100 bg-white shadow-lg">
+                <div v-if="showMobileMenu" id="mobile-navigation" class="md:hidden border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
                     <div class="px-4 py-4 space-y-2">
                         <Link :href="route('upload.create')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('upload.*') }" @click="closeMobileMenu">Upload Data</Link>
                         <Link :href="route('reports.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('reports.*') }" @click="closeMobileMenu">Riwayat Analisis</Link>
@@ -292,7 +294,7 @@ onUnmounted(() => {
 
                         <!-- Auth links for mobile (guest) -->
                         <template v-if="!isLoggedIn">
-                            <hr class="border-gray-100 my-2" />
+                            <hr class="border-gray-100 dark:border-gray-700 my-2" />
                             <Link :href="route('login')" class="mobile-nav-link" @click="closeMobileMenu">Login</Link>
                             <Link :href="route('register')" class="mobile-nav-link text-teal-600" @click="closeMobileMenu">Daftar Akun</Link>
                         </template>
@@ -301,14 +303,14 @@ onUnmounted(() => {
             </Transition>
         </nav>
 
-        <main class="flex-1 py-4 sm:py-6 overflow-x-hidden">
+        <main class="flex-1 py-4 sm:py-6 overflow-x-hidden transition-colors duration-300">
             <slot />
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-t border-gray-200 mt-auto">
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="text-center text-sm text-gray-500">
+                <div class="text-center text-sm text-gray-500 dark:text-gray-400">
                     © {{ new Date().getFullYear() }} DataNarasi — Analisis Data dengan AI
                 </div>
             </div>
@@ -329,14 +331,28 @@ onUnmounted(() => {
     transition: all 0.2s;
 }
 
+:root.dark .nav-link {
+    color: #d1d5db;
+}
+
 .nav-link:hover {
     color: #0d9488;
     background-color: #f0fdfa;
 }
 
+:root.dark .nav-link:hover {
+    color: #5eead4;
+    background-color: rgba(20, 184, 166, 0.1);
+}
+
 .nav-link-active {
     color: #0d9488;
     background-color: #f0fdfa;
+}
+
+:root.dark .nav-link-active {
+    color: #5eead4;
+    background-color: rgba(20, 184, 166, 0.1);
 }
 
 .dropdown-item {
@@ -350,8 +366,16 @@ onUnmounted(() => {
     cursor: pointer;
 }
 
+:root.dark .dropdown-item {
+    color: #d1d5db;
+}
+
 .dropdown-item:hover {
     background-color: #f9fafb;
+}
+
+:root.dark .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .mobile-nav-link {
@@ -366,13 +390,27 @@ onUnmounted(() => {
     transition: all 0.15s;
 }
 
+:root.dark .mobile-nav-link {
+    color: #d1d5db;
+}
+
 .mobile-nav-link:hover {
     background-color: #f0fdfa;
     color: #0d9488;
 }
 
+:root.dark .mobile-nav-link:hover {
+    background-color: rgba(20, 184, 166, 0.1);
+    color: #5eead4;
+}
+
 .mobile-nav-active {
     background-color: #f0fdfa;
     color: #0d9488;
+}
+
+:root.dark .mobile-nav-active {
+    background-color: rgba(20, 184, 166, 0.1);
+    color: #5eead4;
 }
 </style>
