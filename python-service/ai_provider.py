@@ -8,6 +8,7 @@ import time
 import logging
 from typing import Dict, List, Optional
 from http import HTTPStatus
+from cost_calculator import calculate_cost
 
 from providers.gemini import GeminiProvider
 from providers.kimi import KimiProvider
@@ -160,24 +161,49 @@ class AIProviderManager:
 
                 processing_time = int((end_generate - start_generate) * 1000)
 
+                # Capture real token usage dari provider
+                usage = provider._last_usage
+                prompt_tokens = usage.get('prompt_tokens', 0)
+                completion_tokens = usage.get('completion_tokens', 0)
+                total_tokens = usage.get('total_tokens', 0)
+                model_used = usage.get('model_used') or override_model or 'unknown'
+
+                # Hitung cost berdasarkan model pricing
+                cost_usd = calculate_cost(model_used, prompt_tokens, completion_tokens)
+
+                # Fallback estimasi jika API tidak return usage
+                if total_tokens == 0:
+                    total_tokens = max(1, int(len(narrative.split()) * 1.3))
+                    prompt_tokens = 0
+                    completion_tokens = total_tokens
+
                 logs.append({
                     'provider_name': provider_name,
                     'status': 'success',
                     'attempt_number': attempt,
                     'error_message': None,
-                    'tokens_used': max(1, int(len(narrative.split()) * 1.3)),  # Estimasi: 1 token ≈ 0.75 kata
+                    'tokens_used': total_tokens,
+                    'prompt_tokens': prompt_tokens,
+                    'completion_tokens': completion_tokens,
+                    'model_used': model_used,
+                    'cost_usd': cost_usd,
                     'response_time_ms': processing_time
                 })
 
-                logger.info(f"✅ {provider_name} berhasil generate narrative")
+                logger.info(f"✅ {provider_name} berhasil generate narrative (tokens: {total_tokens}, cost: ${cost_usd:.6f})")
 
                 return {
                     'narrative': narrative,
                     'provider_used': provider_name,
+                    'model_used': model_used,
                     'attempts': attempt,
                     'success': True,
                     'logs': logs,
-                    'processing_time_ms': processing_time
+                    'processing_time_ms': processing_time,
+                    'prompt_tokens': prompt_tokens,
+                    'completion_tokens': completion_tokens,
+                    'total_tokens': total_tokens,
+                    'cost_usd': cost_usd,
                 }
 
             except Exception as e:

@@ -33,8 +33,9 @@ class AIProviderController extends Controller
             'successful_requests' => $todayLogs->where('is_success', true)->count(),
             'failed_requests' => $todayLogs->where('is_success', false)->count(),
             'total_tokens' => $todayLogs->sum('tokens_used'),
+            'total_cost' => round((float) $todayLogs->sum('cost'), 6),
             'avg_response_time' => $todayLogs->where('is_success', true)->avg('response_time_ms'),
-            'fallback_count' => 0, // No longer tracked per DB schema
+            'fallback_count' => 0,
         ];
 
         // Calculate stats per provider
@@ -59,6 +60,7 @@ class AIProviderController extends Controller
                 'today_success' => $logs->where('is_success', true)->count(),
                 'today_errors' => $logs->where('is_success', false)->count(),
                 'today_tokens' => $logs->sum('tokens_used'),
+                'today_cost' => round((float) $logs->sum('cost'), 6),
                 'today_avg_response' => $logs->where('is_success', true)->avg('response_time_ms'),
             ];
         });

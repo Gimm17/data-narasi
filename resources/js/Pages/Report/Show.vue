@@ -24,6 +24,11 @@ const props = defineProps<{
         ai_narrative: string
         ai_provider_used: string
         processing_time_ms: number
+        prompt_tokens: number | null
+        completion_tokens: number | null
+        total_tokens: number | null
+        cost_usd: number | null
+        model_used: string | null
         created_at: string
         outputs: Array<{
             id: number
@@ -53,6 +58,26 @@ const formattedDate = computed(() => {
         day: 'numeric', month: 'long', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
     })
+})
+
+const formattedTokens = computed(() => {
+    const t = props.report.total_tokens
+    if (!t) return '-'
+    if (t >= 1000) return `${(t / 1000).toFixed(1)}K`
+    return String(t)
+})
+
+const tokenDetail = computed(() => {
+    const p = props.report.prompt_tokens || 0
+    const c = props.report.completion_tokens || 0
+    return `${p.toLocaleString('id-ID')} in · ${c.toLocaleString('id-ID')} out`
+})
+
+const formattedCost = computed(() => {
+    const c = Number(props.report.cost_usd || 0)
+    if (c === 0) return '-'
+    if (c < 0.01) return `$${c.toFixed(4)}`
+    return `$${c.toFixed(3)}`
 })
 
 const datasetLabel = computed(() => {
@@ -186,7 +211,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
             </div>
 
             <!-- ═══ QUICK STATS ═══ -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Total Baris</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
@@ -213,6 +238,27 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Waktu Proses</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ processingTime }}
+                    </div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                    <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Token</div>
+                    <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+                        {{ formattedTokens }}
+                    </div>
+                    <div v-if="report.total_tokens" class="text-[10px] text-gray-400 mt-0.5">
+                        {{ tokenDetail }}
+                    </div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                    <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Biaya AI</div>
+                    <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
+                        'text-gray-400': formattedCost === '-',
+                        'text-teal-600': formattedCost !== '-'
+                    }">
+                        {{ formattedCost }}
+                    </div>
+                    <div v-if="report.model_used" class="text-[10px] text-gray-400 mt-0.5 truncate" :title="report.model_used">
+                        {{ report.model_used }}
                     </div>
                 </div>
             </div>

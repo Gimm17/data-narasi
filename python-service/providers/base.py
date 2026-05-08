@@ -21,6 +21,13 @@ class BaseAIProvider(ABC):
         self.api_key = api_key
         self.max_tokens = 1024
         self.timeout_seconds = 30
+        # Token usage dari panggilan terakhir — diisi oleh setiap provider
+        self._last_usage = {
+            'prompt_tokens': 0,
+            'completion_tokens': 0,
+            'total_tokens': 0,
+            'model_used': None,  # model yang benar-benar dipakai (bisa fallback)
+        }
 
     @abstractmethod
     def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
