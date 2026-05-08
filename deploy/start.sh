@@ -21,7 +21,7 @@ chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 if [ ! -f .env ]; then
     echo "📝 Creating .env from environment..."
     # Dump ALL relevant env vars into .env so Laravel can read them
-    env | grep -E '^(APP_|DB_|MYSQL_|REDIS_|QUEUE_|MAIL_|LOG_|PYTHON_|GEMINI_|KIMI_|GLM_|NVIDIA_|MINIMAX_|CLAUDE_|AI_|FILESYSTEM_|MAX_UPLOAD|ALLOWED_)' > .env 2>/dev/null || true
+    env | grep -E '^(APP_|DB_|MYSQL_|REDIS_|QUEUE_|MAIL_|LOG_|PYTHON_|GEMINI_|KIMI_|GLM_|NVIDIA_|MINIMAX_|CLAUDE_|OPENROUTER_|AI_|FILESYSTEM_|MAX_UPLOAD|ALLOWED_)' > .env 2>/dev/null || true
     # Ensure critical vars exist
     echo "APP_ENV=${APP_ENV:-production}" >> .env
     echo "APP_DEBUG=${APP_DEBUG:-false}" >> .env
