@@ -25,6 +25,7 @@
 
         <!-- Structured Data -->
         <script type="application/ld+json">
+        @verbatim
             {
                 "@context": "https://schema.org",
                 "@type": "SoftwareApplication",
@@ -38,6 +39,7 @@
                     "priceCurrency": "IDR"
                 }
             }
+        @endverbatim
         </script>
 
         <!-- Fonts -->
