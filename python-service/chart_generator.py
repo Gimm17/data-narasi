@@ -51,7 +51,10 @@ class ChartGenerator:
         # Detect column types
         date_cols = [c for c in df.columns if self._is_date_column(df, c)]
         num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        cat_cols = [c for c in df.select_dtypes(include=['object']).columns if df[c].nunique() <= 20]
+        _id_suffixes = ('_id', '_code', '_no', 'id', 'code')
+        all_cat = [c for c in df.select_dtypes(include=['object']).columns if df[c].nunique() <= 20]
+        # Prioritize name/label columns over ID/code columns for chart readability
+        cat_cols = sorted(all_cat, key=lambda c: any(c.lower().endswith(s) for s in _id_suffixes))
         cat_small = [c for c in cat_cols if df[c].nunique() <= 8]
 
         chart_idx = 0

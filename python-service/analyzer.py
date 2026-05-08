@@ -16,6 +16,20 @@ def _find_cols(df: pd.DataFrame, keywords: List[str]) -> List[str]:
     return [c for c in df.columns if any(k in c.lower() for k in keywords)]
 
 
+# Suffixes that indicate a column is an ID/code, not a human-readable label
+_ID_SUFFIXES = ['_id', '_code', '_no', '_num', '_number', 'id', 'code']
+
+def _find_label_col(df: pd.DataFrame, keywords: List[str]) -> List[str]:
+    """Like _find_cols but prioritizes name/label columns over ID/code columns."""
+    matches = _find_cols(df, keywords)
+    if not matches:
+        return matches
+    # Separate into label-like and id-like
+    labels = [c for c in matches if not any(c.lower().endswith(s) for s in _ID_SUFFIXES)]
+    ids = [c for c in matches if any(c.lower().endswith(s) for s in _ID_SUFFIXES)]
+    return labels + ids  # labels first, IDs as fallback
+
+
 def _safe_numeric_stats(series: pd.Series) -> Dict[str, float]:
     """Helper: hitung statistik numerik dengan error handling"""
     s = pd.to_numeric(series, errors='coerce').dropna()
@@ -213,7 +227,7 @@ class DataAnalyzer:
     def _analyze_sales(self, df: pd.DataFrame) -> Dict[str, Any]:
         insights = {}
         price_cols = _find_cols(df, ['harga', 'price', 'total', 'revenue', 'amount', 'nilai'])
-        product_cols = _find_cols(df, ['produk', 'product', 'item', 'nama', 'barang'])
+        product_cols = _find_label_col(df, ['produk', 'product', 'item', 'nama', 'barang', 'name'])
         date_cols = _find_cols(df, ['tanggal', 'date', 'time', 'tgl'])
 
         if price_cols:
