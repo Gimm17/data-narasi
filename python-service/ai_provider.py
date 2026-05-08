@@ -88,7 +88,7 @@ class AIProviderManager:
 
         logger.info(f"Total providers loaded: {len(self.providers)}/{len(self.provider_order)}")
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, provider_order: Optional[List] = None) -> Dict[str, any]:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 2048, provider_order: Optional[List] = None) -> Dict[str, any]:
         """
         Generate narasi dengan fallback otomatis
 
