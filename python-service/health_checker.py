@@ -54,6 +54,7 @@ class APIHealthChecker:
             'minimax': self._check_minimax,
             'claude': self._check_claude,
             'openrouter': self._check_openrouter,
+            'tokenrouter': self._check_tokenrouter,
         }
 
         checker = checker_map.get(slug)
@@ -343,6 +344,39 @@ class APIHealthChecker:
                 result['models_count'] = len(models)
                 result['tier'] = 'free'  # OpenRouter has free models
                 logger.info(f"✅ OpenRouter key valid, {len(models)} models available")
+            elif response.status_code == 401:
+                result['error'] = 'API key tidak valid (401 Unauthorized)'
+            elif response.status_code == 403:
+                result['error'] = 'API key tidak punya akses (403 Forbidden)'
+            else:
+                result['error'] = f'Unexpected response: {response.status_code}'
+
+    # ─── TokenRouter ─────────────────────────────────────────
+
+    def _check_tokenrouter(self, api_key: str, model_id: str, result: dict):
+        """Check via TokenRouter /v1/models endpoint"""
+        import httpx
+
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        }
+
+        with httpx.Client(timeout=self.TIMEOUT) as client:
+            response = client.get(
+                "https://api.tokenrouter.com/v1/models",
+                headers=headers
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                models = data.get('data', [])
+                # Count text-capable models only
+                text_models = [m for m in models if 'openai' in m.get('supported_endpoint_types', [])]
+                result['valid'] = True
+                result['models_count'] = len(text_models)
+                result['tier'] = 'pro'
+                logger.info(f"✅ TokenRouter key valid, {len(text_models)} text models available")
             elif response.status_code == 401:
                 result['error'] = 'API key tidak valid (401 Unauthorized)'
             elif response.status_code == 403:
