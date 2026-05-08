@@ -23,7 +23,7 @@ class BaseAIProvider(ABC):
         self.timeout_seconds = 30
 
     @abstractmethod
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi dari prompt
 

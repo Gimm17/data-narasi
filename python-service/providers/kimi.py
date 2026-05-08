@@ -23,7 +23,7 @@ class KimiProvider(BaseAIProvider):
             base_url="https://api.moonshot.cn/v1"
         )
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi menggunakan Kimi API
 
@@ -39,10 +39,11 @@ class KimiProvider(BaseAIProvider):
             Exception: Jika gagal
         """
         try:
-            logger.info("Using Kimi provider")
+            active_model = model_id or "moonshot-v1-8k"
+            logger.info(f"Using Kimi provider (model: {active_model})")
 
             response = self.client.chat.completions.create(
-                model="moonshot-v1-8k",
+                model=active_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}

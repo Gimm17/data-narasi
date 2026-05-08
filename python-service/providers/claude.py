@@ -19,7 +19,7 @@ class ClaudeProvider(BaseAIProvider):
         super().__init__(api_key)
         self.client = Anthropic(api_key=api_key)
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi menggunakan Claude API
 
@@ -35,10 +35,11 @@ class ClaudeProvider(BaseAIProvider):
             Exception: Jika gagal
         """
         try:
-            logger.info("Using Claude provider")
+            active_model = model_id or "claude-sonnet-4-20250514"
+            logger.info(f"Using Claude provider (model: {active_model})")
 
             message = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model=active_model,
                 max_tokens=max_tokens,
                 temperature=0.7,
                 system=system_prompt,

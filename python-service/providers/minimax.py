@@ -40,7 +40,7 @@ class MiniMaxProvider(BaseAIProvider):
             base_url="https://api.minimax.io/v1"
         )
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi menggunakan MiniMax API
 
@@ -56,10 +56,11 @@ class MiniMaxProvider(BaseAIProvider):
             Exception: Jika gagal
         """
         try:
-            logger.info(f"Using MiniMax provider (model: {self.model})")
+            active_model = model_id or self.model
+            logger.info(f"Using MiniMax provider (model: {active_model})")
 
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=active_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}

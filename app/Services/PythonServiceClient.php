@@ -66,16 +66,17 @@ class PythonServiceClient
         }
 
         // Ambil urutan provider dari database (admin panel) — sorted by priority
-        // Gunakan kolom slug langsung dari DB — tidak perlu mapping hardcoded
+        // Kirim slug + model_id agar Python service bisa override model per provider
         $mappedOrder = \App\Models\AIProvider::where('is_enabled', true)
             ->orderBy('priority', 'asc')
-            ->pluck('slug')
-            ->filter()
-            ->unique()
+            ->get(['slug', 'model_id'])
+            ->filter(fn ($p) => !empty($p->slug))
+            ->unique('slug')
             ->values()
+            ->map(fn ($p) => ['slug' => $p->slug, 'model_id' => $p->model_id])
             ->toArray();
 
-        Log::info("Provider order from DB for Report {$report->id}: " . implode(' → ', $mappedOrder));
+        Log::info("Provider order from DB for Report {$report->id}: " . implode(' → ', array_column($mappedOrder, 'slug')));
 
         $payload = [
             'report_id' => $report->id,

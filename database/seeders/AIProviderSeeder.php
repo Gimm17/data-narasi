@@ -84,6 +84,17 @@ class AIProviderSeeder extends Seeder
                 'max_tokens' => 1024,
                 'timeout_seconds' => 30,
             ],
+            [
+                'name' => 'OpenRouter',
+                'slug' => 'openrouter',
+                'model_id' => 'google/gemini-2.5-flash',
+                'base_url' => 'https://openrouter.ai/api/v1',
+                'api_key_env' => 'OPENROUTER_API_KEY',
+                'priority' => 7,
+                'is_enabled' => true,
+                'max_tokens' => 1024,
+                'timeout_seconds' => 60, // OpenRouter routing may add latency
+            ],
         ];
 
         foreach ($providers as $provider) {

@@ -15,6 +15,7 @@ from providers.glm import GLMProvider
 from providers.nvidia import NvidiaProvider
 from providers.minimax import MiniMaxProvider
 from providers.claude import ClaudeProvider
+from providers.openrouter import OpenRouterProvider
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class AIProviderManager:
     """
 
     # Provider order (sesuai PROMPT.md)
-    PROVIDER_ORDER = ['gemini', 'kimi', 'glm', 'nvidia', 'minimax', 'claude']
+    PROVIDER_ORDER = ['gemini', 'kimi', 'glm', 'nvidia', 'minimax', 'claude', 'openrouter']
 
     # Provider env keys
     PROVIDER_ENV_KEYS = {
@@ -35,7 +36,8 @@ class AIProviderManager:
         'glm': 'GLM_API_KEY',
         'nvidia': 'NVIDIA_API_KEY',
         'minimax': 'MINIMAX_API_KEY',
-        'claude': 'CLAUDE_API_KEY'
+        'claude': 'CLAUDE_API_KEY',
+        'openrouter': 'OPENROUTER_API_KEY'
     }
 
     # Provider classes
@@ -45,7 +47,8 @@ class AIProviderManager:
         'glm': GLMProvider,
         'nvidia': NvidiaProvider,
         'minimax': MiniMaxProvider,
-        'claude': ClaudeProvider
+        'claude': ClaudeProvider,
+        'openrouter': OpenRouterProvider
     }
 
     def __init__(self):
@@ -81,7 +84,7 @@ class AIProviderManager:
 
         logger.info(f"Total providers loaded: {len(self.providers)}/{len(self.provider_order)}")
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, provider_order: Optional[List[str]] = None) -> Dict[str, any]:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, provider_order: Optional[List] = None) -> Dict[str, any]:
         """
         Generate narasi dengan fallback otomatis
 
@@ -106,12 +109,27 @@ class AIProviderManager:
         # Gunakan order dari parameter (admin panel DB) jika diberikan,
         # fallback ke self.provider_order (dari .env / default)
         active_order = self.provider_order
+        # Map model_id per slug (dari admin panel DB)
+        model_id_map = {}
         if provider_order:
-            # Filter hanya provider yang dikenal
-            valid_order = [p for p in provider_order if p in self.PROVIDER_CLASSES]
+            # Support both formats:
+            # Old: ["gemini", "kimi", ...] (backward compat)
+            # New: [{"slug": "gemini", "model_id": "gemini-2.5-flash"}, ...]
+            valid_order = []
+            for item in provider_order:
+                if isinstance(item, dict):
+                    slug = item.get('slug', '')
+                    if slug in self.PROVIDER_CLASSES:
+                        valid_order.append(slug)
+                        if item.get('model_id'):
+                            model_id_map[slug] = item['model_id']
+                elif isinstance(item, str) and item in self.PROVIDER_CLASSES:
+                    valid_order.append(item)
             if valid_order:
                 active_order = valid_order
                 logger.info(f"Using dynamic provider order from Laravel DB: {active_order}")
+                if model_id_map:
+                    logger.info(f"Model overrides: {model_id_map}")
 
         for attempt, provider_name in enumerate(active_order, 1):
             # Cek apakah provider tersedia
@@ -131,9 +149,10 @@ class AIProviderManager:
             try:
                 logger.info(f"Attempt {attempt}: Using {provider_name}")
 
-                # Generate narrative
+                # Generate narrative (dengan model_id override jika ada)
                 start_generate = time.time()
-                narrative = provider.generate(prompt, system_prompt, max_tokens)
+                override_model = model_id_map.get(provider_name)
+                narrative = provider.generate(prompt, system_prompt, max_tokens, model_id=override_model)
                 end_generate = time.time()
 
                 processing_time = int((end_generate - start_generate) * 1000)

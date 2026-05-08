@@ -28,7 +28,7 @@ class GeminiProvider(BaseAIProvider):
             self._genai = genai_old
             self._sdk = 'old'
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi menggunakan Gemini API
 
@@ -44,13 +44,14 @@ class GeminiProvider(BaseAIProvider):
             Exception: Jika gagal
         """
         try:
-            logger.info("Using Gemini provider")
+            active_model = model_id or "gemini-2.5-flash"
+            logger.info(f"Using Gemini provider (model: {active_model})")
 
             if self._sdk == 'new':
                 from google.genai import types
 
                 response = self.client.models.generate_content(
-                    model="gemini-3-flash-preview",
+                    model=active_model,
                     config=types.GenerateContentConfig(
                         system_instruction=system_prompt,
                         max_output_tokens=max_tokens,
@@ -62,7 +63,7 @@ class GeminiProvider(BaseAIProvider):
             else:
                 # Fallback: SDK lama
                 model = self._genai.GenerativeModel(
-                    'gemini-2.0-flash',
+                    active_model,
                     generation_config=self._genai.GenerationConfig(
                         max_output_tokens=max_tokens,
                         temperature=0.7
