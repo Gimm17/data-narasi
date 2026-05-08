@@ -1,5 +1,115 @@
 # Release Notes
 
+## [2026-05-08 v6] — AI Pro Upgrade: TokenRouter + Cost Tracking + Analysis Enhancement
+
+### 🤖 TokenRouter Integration (Priority 1 Provider)
+
+> User memiliki $200 Pro credit di TokenRouter — dijadikan provider utama.
+
+- **NEW** `python-service/providers/tokenrouter.py` — OpenAI-compatible provider via `api.tokenrouter.com/v1`
+- **57+ model text** terdaftar: OpenAI GPT-5.5, Anthropic Claude Opus 4.7, Google Gemini 3.1 Pro, DeepSeek V4, Qwen 3.6, xAI Grok 4.3, MiniMax, Xiaomi MiMo, NVIDIA Nemotron, Mistral, Z.AI GLM, dll
+- `ai_provider.py` — Registered TokenRouter dengan priority 1 (tertinggi)
+- `health_checker.py` — Health check via `/v1/models` endpoint
+- `config/ai-models.php` — Katalog 57 model dengan metadata
+- `AIProviderSeeder.php` — Seed TokenRouter (priority 1)
+- `deploy/start.sh` — Auto-detect `TOKENROUTER_API_KEY` env variable
+
+### 💰 Real-time Cost & Token Tracking
+
+- **NEW** `python-service/cost_calculator.py` — Pricing table 70+ model, `calculate_cost()` per 1M tokens
+- `providers/base.py` — Added `_last_usage` dict (prompt_tokens, completion_tokens, total_tokens)
+- `providers/tokenrouter.py` — Capture `response.usage` dari API response
+- `providers/openrouter.py` — Capture `response.usage` dari API response
+- `providers/nvidia.py` — Capture `response.usage` dari API response
+- `ai_provider.py` — Calculate cost via `calculate_cost()`, kirim di callback logs
+- `main.py` — Kirim `prompt_tokens`, `completion_tokens`, `cost_usd`, `model_used` ke Laravel
+
+#### Laravel Backend
+- **NEW** Migration `add_token_cost_to_reports_table` — kolom `prompt_tokens`, `completion_tokens`, `total_tokens`, `cost_usd`, `model_used`
+- `Report.php` — Fillable + casts untuk field baru
+- `ReportCallbackController.php` — Store cost per report + per `AIUsageLog` entry
+- `AIProviderController.php` — Aggregate `today_cost` per provider + `total_cost` di header
+
+#### Vue Frontend
+- `Report/Show.vue` — Compact "⚡ AI Usage" bar di bawah Detail Statistik (model, token in/out, biaya)
+- `Admin/AIProviders.vue` — "Biaya Hari Ini" stat card + kolom "Cost" per provider di tabel
+
+### 📊 Chart Generator v2 (3 → 8 Adaptive Charts)
+
+> Inspired by Claude.ai analysis output — sekarang generate chart berdasarkan karakteristik data.
+
+| # | Chart | Trigger |
+|---|-------|---------|
+| 1 | **Trend Line + Area Fill** | Ada kolom tanggal + numerik |
+| 2 | **Category Bar** (top N) | Ada kolom kategorik ≤ 20 unique |
+| 3 | **Horizontal Bar** | Ada 2+ kolom kategorik |
+| 4 | **Donut / Pie** | Ada kolom kategorik ≤ 8 unique |
+| 5 | **Heatmap** (cross-tab) | Ada 2 kolom kategorik + 1 numerik |
+| 6 | **Boxplot per Kategori** | Ada kolom kategorik + numerik |
+| 7 | **Histogram + KDE** | Ada kolom numerik (mean/median lines) |
+| 8 | **Scatter Correlation** | Ada 2+ kolom numerik berkorelasi |
+
+- Premium color palette (`#1B4F72`, `#2E86C1`, `#F39C12`, dll)
+- Peak annotation pada trend chart
+- Number formatting ($1.2M, $500K)
+- Seaborn heatmap dengan anotasi nilai
+
+### 🧹 Data Cleaner v2 (8 → 12 Steps)
+
+| Step | Metode | Baru? |
+|------|--------|-------|
+| 1 | Deteksi Encoding | - |
+| 2 | Baca File | - |
+| 3 | Trim Whitespace | - |
+| **3.5** | **Standardisasi Nama Kolom** (snake_case) | ✅ NEW |
+| 4 | Hapus Baris Kosong | - |
+| 5 | Hapus Duplikat | - |
+| **5.5** | **Deteksi Kolom Zero-Variance** (konstan) | ✅ NEW |
+| 6 | Konversi Tipe Data | - |
+| **6.5** | **Bersihkan Karakter Invalid** (encoding artifacts) | ✅ NEW |
+| **7** | **Deteksi Anomali & Outlier (IQR method)** | ✅ ENHANCED |
+| 8 | Isi Nilai Kosong | - |
+
+- IQR outlier detection: Q1-1.5×IQR, Q3+1.5×IQR
+- Column name standardization: `Order Date` → `Order_Date`
+- Zero-variance detection: flag kolom yang isinya sama semua (e.g. Country = "US")
+- Invalid char cleanup: encoding artifacts (â€™ → '), non-printable chars
+
+### 🧠 Analyzer v2 (Enriched Stats)
+
+- **Per kolom numerik**: skewness, distribution shape (normal/right_skewed/left_skewed), IQR outlier count, mean/median ratio
+- **Per kolom kategorik**: top 5 value counts
+- **Enriched stats** untuk prompt builder:
+  - `correlations` — top 8 korelasi antar variabel numerik
+  - `yearly_trend` — aggregasi per tahun dengan growth rate
+  - `peak_month` — bulan dengan nilai tertinggi
+  - `{category}_breakdown` — breakdown per kategori (total, count, avg, %)
+  - `outlier_summary` — ringkasan outlier per kolom (count, %, max/min)
+
+### 📝 Prompt Builder v2 (Data-Rich)
+
+> Masalah utama: prompt lama hanya kirim metadata (jumlah baris/kolom). AI tidak punya data untuk buat insight tajam.
+
+- **System prompt** — Instruksi analisis setara konsultan senior:
+  - Wajib sebutkan angka spesifik
+  - Bandingkan mean vs median (deteksi skewness)
+  - Identifikasi anomali dan outlier
+  - Minimal 3 rekomendasi actionable
+- **User prompt** sekarang berisi **data aktual**:
+  - Tren temporal (yearly growth rates)
+  - Category breakdowns (total, count, avg, %)
+  - Korelasi antar variabel (r-value + arah + kekuatan)
+  - Outlier summary (count + bounds)
+  - Distribution shapes + mean/median ratios
+  - Null values yang diisi + metode
+  - Domain-specific insights dari analyzer
+
+### 🔧 OpenRouter Stabilization
+
+- Smart 3-layer fallback: model terpilih → reduced token → 4 model gratis
+- HTTP 402 handling (Insufficient Credits) → graceful fallback
+
+
 ## [2026-04-29/30 v4] — Railway Production Deployment & UI Polish
 
 ### 🚀 Railway Deployment (`🚂 RAILWAY-SPECIFIC`)
