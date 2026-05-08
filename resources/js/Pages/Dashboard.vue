@@ -49,33 +49,33 @@ const maxWeekly = computed(() => Math.max(...props.weeklyCounts.map(w => w.count
     <AppLayout>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
-                <p class="mt-1 text-sm text-gray-500">Overview seluruh aktivitas DataNarasi</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Admin</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Overview seluruh aktivitas DataNarasi</p>
             </div>
 
             <!-- Stat Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-2xl border border-gray-100 p-5">
-                    <div class="text-xs text-gray-400 font-medium uppercase tracking-wide">Total Report</div>
+                <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-5">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 font-medium uppercase tracking-wide">Total Report</div>
                     <div class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total_reports }}</div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 p-5">
-                    <div class="text-xs text-gray-400 font-medium uppercase tracking-wide">Success Rate</div>
+                <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-5">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 font-medium uppercase tracking-wide">Success Rate</div>
                     <div class="text-3xl font-bold mt-1" :class="stats.success_rate >= 80 ? 'text-green-600' : 'text-orange-500'">{{ stats.success_rate }}%</div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 p-5">
-                    <div class="text-xs text-gray-400 font-medium uppercase tracking-wide">Avg Process Time</div>
+                <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-5">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 font-medium uppercase tracking-wide">Avg Process Time</div>
                     <div class="text-3xl font-bold text-gray-900 mt-1">{{ formatTime(stats.avg_processing_time) }}</div>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 p-5">
-                    <div class="text-xs text-gray-400 font-medium uppercase tracking-wide">Total Baris</div>
+                <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-5">
+                    <div class="text-xs text-gray-400 dark:text-gray-600 font-medium uppercase tracking-wide">Total Baris</div>
                     <div class="text-3xl font-bold text-gray-900 mt-1">{{ stats.total_rows.toLocaleString() }}</div>
                 </div>
             </div>
 
             <div class="grid lg:grid-cols-3 gap-6 mb-8">
                 <!-- Weekly Chart (CSS bars) -->
-                <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
+                <div class="lg:col-span-2 bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-4">Reports per Minggu</h3>
                     <div v-if="weeklyCounts.length" class="flex items-end gap-2 h-32">
                         <div v-for="w in weeklyCounts" :key="w.label" class="flex-1 flex flex-col items-center gap-1">
@@ -91,7 +91,7 @@ const maxWeekly = computed(() => Math.max(...props.weeklyCounts.map(w => w.count
                 </div>
 
                 <!-- Provider Usage -->
-                <div class="bg-white rounded-2xl border border-gray-100 p-6">
+                <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-4">AI Provider Usage</h3>
                     <div v-if="providerUsage.length" class="space-y-3">
                         <div v-for="p in providerUsage" :key="p.name" class="flex items-center justify-between">
@@ -104,7 +104,7 @@ const maxWeekly = computed(() => Math.max(...props.weeklyCounts.map(w => w.count
             </div>
 
             <!-- Recent Reports -->
-            <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            <div class="bg-white dark:bg-cream-300 rounded-2xl border border-gray-100 dark:border-cream-400 p-6">
                 <h3 class="text-sm font-semibold text-gray-700 mb-4">Report Terbaru</h3>
                 <div v-if="recentReports.length" class="space-y-3">
                     <div v-for="r in recentReports" :key="r.id" class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">

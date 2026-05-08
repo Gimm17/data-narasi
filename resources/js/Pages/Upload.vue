@@ -71,10 +71,10 @@ const selectedToneInfo = computed(() =>
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12">
             <!-- Header -->
             <div class="mb-8">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                     Upload Data
                 </h1>
-                <p class="mt-1 text-sm text-gray-500">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Upload file CSV atau Excel untuk dianalisis dengan AI
                 </p>
             </div>
@@ -113,7 +113,7 @@ const selectedToneInfo = computed(() =>
                             :class="[
                                 selectedAnalysisType === type.value
                                     ? 'border-teal-500 bg-teal-50/60'
-                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                    : 'border-gray-200 hover:border-gray-300 bg-white dark:bg-cream-300 dark:border-cream-400'
                             ]"
                         >
                             <div class="flex items-center gap-2 mb-1">
@@ -155,7 +155,7 @@ const selectedToneInfo = computed(() =>
                             :class="[
                                 selectedTone === tone.value
                                     ? 'border-teal-500 bg-teal-50/60'
-                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                    : 'border-gray-200 hover:border-gray-300 bg-white dark:bg-cream-300 dark:border-cream-400'
                             ]"
                         >
                             <div class="flex items-center gap-2 mb-1">

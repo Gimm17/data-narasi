@@ -254,21 +254,21 @@ const getHealthBadge = (providerId: number) => {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <!-- Header -->
             <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">AI Providers</h1>
-                <p class="mt-1 text-sm text-gray-500">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">AI Providers</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Kelola konfigurasi, urutan prioritas, dan monitor performa AI providers.
                 </p>
             </div>
 
             <!-- Quick Stats -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Request Hari Ini</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ todayStats.total_requests }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Success Rate</div>
                     <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
                         'text-emerald-600': successRate >= 90,
@@ -279,13 +279,13 @@ const getHealthBadge = (providerId: number) => {
                         {{ todayStats.total_requests > 0 ? successRate + '%' : '-' }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Token Digunakan</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ todayStats.total_tokens.toLocaleString('id-ID') }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Biaya Hari Ini</div>
                     <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
                         'text-teal-600': todayStats.total_cost > 0,
@@ -294,7 +294,7 @@ const getHealthBadge = (providerId: number) => {
                         {{ formatCost(todayStats.total_cost) }}
                     </div>
                 </div>
-                <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
+                <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Provider Aktif</div>
                     <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ activeProviders }} / {{ providers.length }}
@@ -303,7 +303,7 @@ const getHealthBadge = (providerId: number) => {
             </div>
 
             <!-- Providers Table -->
-            <div class="rounded-xl border border-gray-200 bg-white overflow-hidden mb-8">
+            <div class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 overflow-hidden mb-8">
                 <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="text-sm font-semibold text-gray-700">Daftar Provider</h2>
                     <span class="text-[11px] text-gray-400">Drag untuk reorder · Klik ⚙ untuk edit</span>
@@ -449,7 +449,7 @@ const getHealthBadge = (providerId: number) => {
             </div>
 
             <!-- Recent Fallback Logs -->
-            <div v-if="recentFallbacks.length > 0" class="rounded-xl border border-gray-200 bg-white overflow-hidden mb-8">
+            <div v-if="recentFallbacks.length > 0" class="rounded-xl border border-gray-200 dark:border-cream-400 bg-white dark:bg-cream-300 overflow-hidden mb-8">
                 <div class="px-5 py-3.5 border-b border-gray-100">
                     <h2 class="text-sm font-semibold text-gray-700">Log Error Terbaru</h2>
                 </div>
@@ -497,7 +497,7 @@ const getHealthBadge = (providerId: number) => {
                 <div class="absolute inset-0 bg-black/30" @click="closeEditModal" />
 
                 <!-- Modal -->
-                <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+                <div class="relative bg-white dark:bg-cream-300 rounded-xl shadow-xl w-full max-w-md mx-4">
                     <div class="px-5 py-4 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-800">
                             Edit · {{ editingProvider.name }}
@@ -645,7 +645,7 @@ const getHealthBadge = (providerId: number) => {
         <!-- API Key Health Check Result Modal -->
         <Teleport to="body">
             <div v-if="showHealthModal && healthModalData" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showHealthModal = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                <div class="bg-white dark:bg-cream-300 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
                     <!-- Header -->
                     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex items-center gap-3">
