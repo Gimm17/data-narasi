@@ -7,6 +7,9 @@ defineProps({
     canRegister: Boolean,
 });
 
+// Mobile menu
+const showMenu = ref(false);
+
 // Animated counters
 const counters = ref({ types: 0, tones: 0, providers: 0 });
 onMounted(() => {
@@ -49,9 +52,11 @@ const steps = [
     <div class="min-h-screen bg-gray-50">
         <!-- Navbar -->
         <nav class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between min-h-16 gap-3">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between min-h-16">
                 <span class="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">Data<span class="text-teal-600">Narasi</span></span>
-                <div class="flex items-center justify-end gap-1 sm:gap-3 overflow-x-auto py-2 -mr-1">
+
+                <!-- Desktop links -->
+                <div class="hidden md:flex items-center gap-3">
                     <Link :href="route('upload.create')" class="px-4 py-2 text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors">
                         Upload
                     </Link>
@@ -59,6 +64,39 @@ const steps = [
                         Riwayat
                     </Link>
                     <Link v-if="canLogin" :href="route('login')" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                        Admin Login
+                    </Link>
+                </div>
+
+                <!-- Mobile hamburger -->
+                <button
+                    @click="showMenu = !showMenu"
+                    class="md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-gray-100 text-gray-600 transition-colors"
+                    :aria-expanded="showMenu"
+                    :aria-label="showMenu ? 'Tutup menu' : 'Buka menu'"
+                >
+                    <svg v-if="!showMenu" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile menu panel -->
+            <div v-if="showMenu" class="md:hidden border-t border-gray-100 bg-white shadow-lg">
+                <div class="px-4 py-3 space-y-1">
+                    <Link :href="route('upload.create')" class="block px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors" @click="showMenu = false">
+                        Upload Data
+                    </Link>
+                    <Link :href="route('reports.index')" class="block px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors" @click="showMenu = false">
+                        Riwayat Analisis
+                    </Link>
+                    <Link v-if="canLogin" :href="route('login')" class="block px-4 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors" @click="showMenu = false">
                         Admin Login
                     </Link>
                 </div>
