@@ -40,14 +40,18 @@ const steps = [
 </script>
 
 <template>
-    <Head title="DataNarasi — Analisis Data dengan AI" />
+    <Head title="DataNarasi — Analisis Data AI untuk CSV dan Excel">
+        <meta name="description" content="DataNarasi membantu Anda upload CSV/Excel, membersihkan data otomatis, membuat chart interaktif, dan menghasilkan narasi insight bisnis dengan AI dalam Bahasa Indonesia." />
+        <meta property="og:title" content="DataNarasi — Analisis Data AI untuk CSV dan Excel" />
+        <meta property="og:description" content="Ubah data mentah menjadi visualisasi dan insight bisnis siap pakai dalam hitungan menit." />
+    </Head>
 
     <div class="min-h-screen bg-gray-50">
         <!-- Navbar -->
         <nav class="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-                <span class="text-2xl font-bold text-gray-900">Data<span class="text-teal-600">Narasi</span></span>
-                <div class="flex items-center gap-3">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between min-h-16 gap-3">
+                <span class="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">Data<span class="text-teal-600">Narasi</span></span>
+                <div class="flex items-center justify-end gap-1 sm:gap-3 overflow-x-auto py-2 -mr-1">
                     <Link :href="route('upload.create')" class="px-4 py-2 text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors">
                         Upload
                     </Link>
@@ -67,18 +71,18 @@ const steps = [
             <div class="absolute top-20 right-10 w-72 h-72 bg-teal-200/20 rounded-full blur-3xl"></div>
             <div class="absolute bottom-10 left-10 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl"></div>
 
-            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
+            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-24 lg:py-28 text-center">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100 text-teal-700 text-xs font-medium mb-6">
                     <span class="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></span>
                     Gratis — Tanpa Login
                 </div>
 
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
                     Upload Data,<br>
                     <span class="text-teal-600">AI Tulis Insightnya</span>
                 </h1>
 
-                <p class="mt-5 text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                <p class="mt-5 text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
                     Upload file CSV/Excel → data dibersihkan otomatis → AI menganalisis dan menulis narasi bisnis dalam Bahasa Indonesia. Selesai dalam hitungan menit.
                 </p>
 
@@ -92,7 +96,7 @@ const steps = [
                 </div>
 
                 <!-- Stats counters -->
-                <div class="mt-14 grid grid-cols-3 gap-6 max-w-md mx-auto">
+                <div class="mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-md mx-auto">
                     <div class="text-center">
                         <div class="text-2xl font-bold text-teal-600">{{ counters.types }}</div>
                         <div class="text-xs text-gray-400 mt-1">Tipe Analisis</div>

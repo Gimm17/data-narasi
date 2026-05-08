@@ -11,6 +11,55 @@ use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
+| SEO Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/robots.txt', function () {
+    $baseUrl = config('app.url') ?: url('/');
+
+    return response(
+        "User-agent: *\n" .
+        "Disallow: /admin/\n" .
+        "Disallow: /api/\n" .
+        "Disallow: /dashboard\n" .
+        "Disallow: /profile\n" .
+        "Allow: /\n\n" .
+        "Sitemap: {$baseUrl}/sitemap.xml\n",
+        200,
+        ['Content-Type' => 'text/plain']
+    );
+});
+
+Route::get('/sitemap.xml', function () {
+    $baseUrl = rtrim(config('app.url') ?: url('/'), '/');
+    $now = now()->toAtomString();
+    $urls = [
+        ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
+        ['loc' => '/upload', 'priority' => '0.9', 'changefreq' => 'weekly'],
+        ['loc' => '/reports', 'priority' => '0.5', 'changefreq' => 'weekly'],
+    ];
+
+    $items = collect($urls)->map(function ($url) use ($baseUrl, $now) {
+        return "    <url>\n" .
+            "        <loc>{$baseUrl}{$url['loc']}</loc>\n" .
+            "        <lastmod>{$now}</lastmod>\n" .
+            "        <changefreq>{$url['changefreq']}</changefreq>\n" .
+            "        <priority>{$url['priority']}</priority>\n" .
+            "    </url>";
+    })->implode("\n");
+
+    return response(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" .
+        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" .
+        $items . "\n" .
+        "</urlset>",
+        200,
+        ['Content-Type' => 'application/xml']
+    );
+});
+
+/*
+|--------------------------------------------------------------------------
 | Landing Page (Guest-accessible)
 |--------------------------------------------------------------------------
 */

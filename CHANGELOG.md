@@ -1,5 +1,28 @@
 # Release Notes
 
+## [2026-05-08 v7] — Mobile UX + Technical SEO Hardening
+
+### 📱 Mobile Responsive UX
+
+- `resources/js/Layouts/AppLayout.vue` — mobile navigation now has ARIA attributes, larger touch targets, clearer labels, focus rings, and close-on-navigation behavior.
+- `resources/js/Pages/Welcome.vue` — landing navbar, hero spacing, typography, CTA area, and stats counters refined for small screens.
+- `resources/js/Pages/Upload.vue` — upload form cards now stack cleanly on mobile, use larger selectable areas, stronger focus states, and full-width primary actions.
+- `resources/js/Pages/Report/Show.vue` — report headers, metadata, KPI cards, chart tabs, downloads, and footer actions now avoid horizontal overflow and remain readable on narrow devices.
+
+### 🔎 SEO Foundation
+
+- `resources/views/app.blade.php` — added global meta description, robots tag, canonical URL, theme color, Open Graph tags, Twitter Card tags, and `SoftwareApplication` JSON-LD schema.
+- `resources/js/Pages/Welcome.vue` — added page-specific title, description, and Open Graph metadata for the public landing page.
+- `resources/js/Pages/Upload.vue` — added unique title, description, and Open Graph metadata for upload intent.
+- `resources/js/Pages/Report/Show.vue` — added report-specific title/description/Open Graph metadata and `noindex, follow` to prevent private/visitor-token report pages from being indexed while still allowing link discovery.
+- `routes/web.php` — added dynamic `/robots.txt` and `/sitemap.xml` routes without extra dependencies.
+
+### ✅ Verification
+
+- `npm run build` — passed.
+- `php artisan route:list | Select-String -Pattern "sitemap|robots"` — verified `/robots.txt` and `/sitemap.xml` are registered.
+- `php -l routes/web.php` and `php -l resources/views/app.blade.php` — no PHP syntax errors.
+
 ## [2026-05-08 v6] — AI Pro Upgrade: TokenRouter + Cost Tracking + Analysis Enhancement
 
 ### 🤖 TokenRouter Integration (Priority 1 Provider)
