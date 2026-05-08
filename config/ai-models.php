@@ -193,51 +193,112 @@ return [
     ],
 
     // ────────────────────────────────────────────────
-    // OPENROUTER — Source: https://openrouter.ai/models
-    // Unified API gateway ke 300+ model via satu API key.
+    // OPENROUTER — Source: https://openrouter.ai/models (May 2026)
+    // PRO TIER — hanya model premium, diurutkan per vendor.
     // Admin bisa ketik model ID custom yang tidak ada di daftar.
     // ────────────────────────────────────────────────
     'openrouter' => [
-        // ── Google (via OpenRouter) ──
-        ['id' => 'google/gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'desc' => '✅ Free — Google, cepat, reasoning'],
-        ['id' => 'google/gemini-2.5-pro-preview', 'name' => 'Gemini 2.5 Pro', 'desc' => '💰 Paid — Google, terkuat'],
-        ['id' => 'google/gemma-3-27b-it', 'name' => 'Gemma 3 27B', 'desc' => '✅ Free — Google open model'],
 
-        // ── DeepSeek ──
-        ['id' => 'deepseek/deepseek-chat-v3-0324', 'name' => 'DeepSeek V3', 'desc' => '✅ Free — General chat'],
-        ['id' => 'deepseek/deepseek-r1', 'name' => 'DeepSeek R1', 'desc' => '✅ Free — Reasoning model'],
-        ['id' => 'deepseek/deepseek-r1-0528', 'name' => 'DeepSeek R1 (0528)', 'desc' => '✅ Free — Terbaru'],
+        // ══════════════════════════════════════════
+        // OpenAI
+        // ══════════════════════════════════════════
+        ['id' => 'openai/gpt-5.5-pro', 'name' => 'GPT-5.5 Pro', 'desc' => '$30/1M — Flagship terkuat OpenAI'],
+        ['id' => 'openai/gpt-5.5', 'name' => 'GPT-5.5', 'desc' => '$5/1M — Flagship OpenAI, 1M context'],
+        ['id' => 'openai/gpt-5.4-pro', 'name' => 'GPT-5.4 Pro', 'desc' => '$30/1M — Top tier, 1M context'],
+        ['id' => 'openai/gpt-5.4', 'name' => 'GPT-5.4', 'desc' => '$2.50/1M — Premium, 1M context'],
+        ['id' => 'openai/gpt-5.3-chat', 'name' => 'GPT-5.3 Chat', 'desc' => '$1.75/1M — Chat-optimized'],
+        ['id' => 'openai/gpt-5.3-codex', 'name' => 'GPT-5.3 Codex', 'desc' => '$1.75/1M — Code specialist, 400K context'],
+        ['id' => 'openai/gpt-5.2-pro', 'name' => 'GPT-5.2 Pro', 'desc' => '$21/1M — Pro tier, 400K context'],
+        ['id' => 'openai/gpt-5.2', 'name' => 'GPT-5.2', 'desc' => '$1.75/1M — Balanced, 400K context'],
+        ['id' => 'openai/gpt-5.2-codex', 'name' => 'GPT-5.2 Codex', 'desc' => '$1.75/1M — Code specialist'],
+        ['id' => 'openai/gpt-5-pro', 'name' => 'GPT-5 Pro', 'desc' => '$15/1M — Pro tier'],
+        ['id' => 'openai/gpt-5', 'name' => 'GPT-5', 'desc' => '$1.25/1M — Standard GPT-5, 400K context'],
+        ['id' => 'openai/gpt-5-codex', 'name' => 'GPT-5 Codex', 'desc' => '$1.25/1M — Code specialist'],
+        ['id' => 'openai/gpt-5-image', 'name' => 'GPT-5 Image', 'desc' => '$10/1M — Multimodal image generation'],
+        ['id' => 'openai/o3-pro', 'name' => 'O3 Pro', 'desc' => '$20/1M — Reasoning pro tier'],
+        ['id' => 'openai/o3', 'name' => 'O3', 'desc' => '$2/1M — Reasoning model'],
+        ['id' => 'openai/o3-deep-research', 'name' => 'O3 Deep Research', 'desc' => '$10/1M — Deep research agent'],
+        ['id' => 'openai/o4-mini', 'name' => 'O4 Mini', 'desc' => '$1.10/1M — Latest reasoning, efficient'],
+        ['id' => 'openai/o4-mini-high', 'name' => 'O4 Mini High', 'desc' => '$1.10/1M — High-effort reasoning'],
+        ['id' => 'openai/o4-mini-deep-research', 'name' => 'O4 Mini Deep Research', 'desc' => '$2/1M — Deep research agent'],
+        ['id' => 'openai/o1-pro', 'name' => 'O1 Pro', 'desc' => '$150/1M — Ultimate reasoning'],
+        ['id' => 'openai/o1', 'name' => 'O1', 'desc' => '$15/1M — Advanced reasoning'],
+        ['id' => 'openai/gpt-4.1', 'name' => 'GPT-4.1', 'desc' => '$2/1M — Stabil, 1M context'],
+        ['id' => 'openai/gpt-4.1-mini', 'name' => 'GPT-4.1 Mini', 'desc' => '$0.40/1M — Cepat, efisien'],
+        ['id' => 'openai/gpt-4o', 'name' => 'GPT-4o', 'desc' => '$2.50/1M — Multimodal, 128K context'],
+        ['id' => 'openai/gpt-4-turbo', 'name' => 'GPT-4 Turbo', 'desc' => '$10/1M — Legacy powerhouse, 128K context'],
 
-        // ── Meta Llama ──
-        ['id' => 'meta-llama/llama-4-maverick', 'name' => 'Llama 4 Maverick', 'desc' => '✅ Free — 400B MoE'],
-        ['id' => 'meta-llama/llama-4-scout', 'name' => 'Llama 4 Scout', 'desc' => '✅ Free — 109B MoE'],
-        ['id' => 'meta-llama/llama-3.3-70b-instruct', 'name' => 'Llama 3.3 70B', 'desc' => '✅ Free — Stabil'],
+        // ══════════════════════════════════════════
+        // Anthropic (Claude)
+        // ══════════════════════════════════════════
+        ['id' => 'anthropic/claude-opus-4.7', 'name' => 'Claude Opus 4.7', 'desc' => '$5/1M — Terkuat, 1M context'],
+        ['id' => 'anthropic/claude-opus-4.6', 'name' => 'Claude Opus 4.6', 'desc' => '$5/1M — Agentic AI, 1M context'],
+        ['id' => 'anthropic/claude-opus-4.6-fast', 'name' => 'Claude Opus 4.6 Fast', 'desc' => '$30/1M — Low latency, 1M context'],
+        ['id' => 'anthropic/claude-opus-4.5', 'name' => 'Claude Opus 4.5', 'desc' => '$5/1M — Hybrid reasoning'],
+        ['id' => 'anthropic/claude-opus-4.1', 'name' => 'Claude Opus 4.1', 'desc' => '$15/1M — Premium quality'],
+        ['id' => 'anthropic/claude-opus-4', 'name' => 'Claude Opus 4', 'desc' => '$15/1M — Deep thinking'],
+        ['id' => 'anthropic/claude-sonnet-4.6', 'name' => 'Claude Sonnet 4.6', 'desc' => '$3/1M — Terbaru, 1M context'],
+        ['id' => 'anthropic/claude-sonnet-4.5', 'name' => 'Claude Sonnet 4.5', 'desc' => '$3/1M — Balanced, 1M context'],
+        ['id' => 'anthropic/claude-sonnet-4', 'name' => 'Claude Sonnet 4', 'desc' => '$3/1M — Agentic coding, 1M context'],
+        ['id' => 'anthropic/claude-3.7-sonnet', 'name' => 'Claude 3.7 Sonnet', 'desc' => '$3/1M — Proven reliable'],
+        ['id' => 'anthropic/claude-3.7-sonnet:thinking', 'name' => 'Claude 3.7 Sonnet (Thinking)', 'desc' => '$3/1M — Extended thinking mode'],
 
-        // ── Qwen ──
-        ['id' => 'qwen/qwen3-235b-a22b', 'name' => 'Qwen 3 235B', 'desc' => '✅ Free — Terkuat dari Qwen'],
-        ['id' => 'qwen/qwen3-32b', 'name' => 'Qwen 3 32B', 'desc' => '✅ Free — Ringan, cepat'],
-        ['id' => 'qwen/qwen3-30b-a3b', 'name' => 'Qwen 3 30B MoE', 'desc' => '✅ Free — Efisien'],
+        // ══════════════════════════════════════════
+        // Google (Gemini)
+        // ══════════════════════════════════════════
+        ['id' => 'google/gemini-3.1-pro-preview', 'name' => 'Gemini 3.1 Pro Preview', 'desc' => '$2/1M — Latest flagship, 1M context'],
+        ['id' => 'google/gemini-2.5-pro', 'name' => 'Gemini 2.5 Pro', 'desc' => '$1.25/1M — Deep reasoning, 1M context'],
+        ['id' => 'google/gemini-2.5-pro-preview', 'name' => 'Gemini 2.5 Pro Preview', 'desc' => '$1.25/1M — Preview, 1M context'],
 
-        // ── Mistral ──
-        ['id' => 'mistralai/mistral-small-3.2-24b-instruct', 'name' => 'Mistral Small 3.2', 'desc' => '✅ Free — 24B'],
+        // ══════════════════════════════════════════
+        // xAI (Grok)
+        // ══════════════════════════════════════════
+        ['id' => 'x-ai/grok-4', 'name' => 'Grok 4', 'desc' => '$3/1M — Frontier, 256K context'],
+        ['id' => 'x-ai/grok-4.3', 'name' => 'Grok 4.3', 'desc' => '$1.25/1M — Latest, 1M context'],
+        ['id' => 'x-ai/grok-4.20', 'name' => 'Grok 4.20', 'desc' => '$1.25/1M — Extended, 2M context'],
+        ['id' => 'x-ai/grok-4.20-multi-agent', 'name' => 'Grok 4.20 Multi-Agent', 'desc' => '$2/1M — Multi-agent, 2M context'],
+        ['id' => 'x-ai/grok-3', 'name' => 'Grok 3', 'desc' => '$3/1M — Proven reliable'],
 
-        // ── Microsoft ──
-        ['id' => 'microsoft/phi-4-reasoning', 'name' => 'Phi-4 Reasoning', 'desc' => '✅ Free — Microsoft reasoning'],
-        ['id' => 'microsoft/mai-ds-r1', 'name' => 'MAI DS R1', 'desc' => '✅ Free — Microsoft AI'],
+        // ══════════════════════════════════════════
+        // Perplexity (Search-augmented)
+        // ══════════════════════════════════════════
+        ['id' => 'perplexity/sonar-pro-search', 'name' => 'Sonar Pro Search', 'desc' => '$3/1M — Pro search, 200K context'],
+        ['id' => 'perplexity/sonar-pro', 'name' => 'Sonar Pro', 'desc' => '$3/1M — Pro tier, 200K context'],
+        ['id' => 'perplexity/sonar-reasoning-pro', 'name' => 'Sonar Reasoning Pro', 'desc' => '$2/1M — Reasoning + search'],
+        ['id' => 'perplexity/sonar-deep-research', 'name' => 'Sonar Deep Research', 'desc' => '$2/1M — Deep research agent'],
 
-        // ── NVIDIA ──
-        ['id' => 'nvidia/llama-3.1-nemotron-70b-instruct', 'name' => 'Nemotron 70B', 'desc' => '✅ Free — NVIDIA tuned'],
+        // ══════════════════════════════════════════
+        // Mistral
+        // ══════════════════════════════════════════
+        ['id' => 'mistralai/mistral-large', 'name' => 'Mistral Large', 'desc' => '$2/1M — Flagship, 128K context'],
+        ['id' => 'mistralai/mistral-medium-3-5', 'name' => 'Mistral Medium 3.5', 'desc' => '$1.50/1M — Latest medium, 262K context'],
+        ['id' => 'mistralai/pixtral-large-2411', 'name' => 'Pixtral Large', 'desc' => '$2/1M — Vision-language, 131K context'],
 
-        // ── OpenAI (Paid) ──
-        ['id' => 'openai/gpt-4.1-mini', 'name' => 'GPT-4.1 Mini', 'desc' => '💰 Paid — OpenAI, cepat'],
-        ['id' => 'openai/gpt-4.1-nano', 'name' => 'GPT-4.1 Nano', 'desc' => '💰 Paid — OpenAI, tercepat'],
-        ['id' => 'openai/gpt-4o', 'name' => 'GPT-4o', 'desc' => '💰 Paid — OpenAI multimodal'],
-        ['id' => 'openai/o3-mini', 'name' => 'O3 Mini', 'desc' => '💰 Paid — OpenAI reasoning'],
+        // ══════════════════════════════════════════
+        // Amazon
+        // ══════════════════════════════════════════
+        ['id' => 'amazon/nova-premier-v1', 'name' => 'Nova Premier 1.0', 'desc' => '$2.50/1M — Amazon flagship, 1M context'],
 
-        // ── Anthropic (Paid via OpenRouter) ──
-        ['id' => 'anthropic/claude-sonnet-4', 'name' => 'Claude Sonnet 4', 'desc' => '💰 Paid — Anthropic terbaru'],
-        ['id' => 'anthropic/claude-3.5-sonnet', 'name' => 'Claude 3.5 Sonnet', 'desc' => '💰 Paid — Stabil'],
-        ['id' => 'anthropic/claude-haiku-4', 'name' => 'Claude Haiku 4', 'desc' => '💰 Paid — Cepat, murah'],
+        // ══════════════════════════════════════════
+        // Z.AI (GLM)
+        // ══════════════════════════════════════════
+        ['id' => 'z-ai/glm-5.1', 'name' => 'GLM 5.1', 'desc' => '$1.05/1M — Latest ZhiPu, 200K context'],
+        ['id' => 'z-ai/glm-5-turbo', 'name' => 'GLM 5 Turbo', 'desc' => '$1.20/1M — Fast, 200K context'],
+
+        // ══════════════════════════════════════════
+        // Qwen
+        // ══════════════════════════════════════════
+        ['id' => 'qwen/qwen3.6-max-preview', 'name' => 'Qwen 3.6 Max Preview', 'desc' => '$1.04/1M — Latest flagship, 262K context'],
+
+        // ══════════════════════════════════════════
+        // Cohere
+        // ══════════════════════════════════════════
+        ['id' => 'cohere/command-a', 'name' => 'Command A', 'desc' => '$2.50/1M — Enterprise, 256K context'],
+
+        // ══════════════════════════════════════════
+        // DeepCogito
+        // ══════════════════════════════════════════
+        ['id' => 'deepcogito/cogito-v2.1-671b', 'name' => 'Cogito v2.1 671B', 'desc' => '$1.25/1M — 671B reasoning, 128K context'],
     ],
 
 ];
