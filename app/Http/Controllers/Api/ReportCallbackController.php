@@ -93,12 +93,17 @@ class ReportCallbackController extends Controller
             }
 
             // Update report dengan hasil dari Python
+            // total_rows diambil dari cleaning_log.original_rows (jumlah baris sebelum cleaning)
+            $cleaningLog = $validated['cleaning_log'] ?? null;
+            $totalRows = $cleaningLog['original_rows'] ?? $report->total_rows;
+
             $report->update([
                 'ai_narrative' => $validated['ai_narrative'] ?? null,
                 'summary_stats' => $validated['summary_stats'] ?? null,
-                'cleaning_log' => $validated['cleaning_log'] ?? null,
+                'cleaning_log' => $cleaningLog,
                 'chart_paths' => $chartPaths,
                 'clean_path' => $validated['clean_path'] ?? null,
+                'total_rows' => $totalRows,
                 'clean_rows' => $validated['clean_rows'] ?? 0,
                 'ai_provider_used' => $validated['ai_provider_used'] ?? null,
                 'processing_time_ms' => $validated['processing_time_ms'] ?? null,
