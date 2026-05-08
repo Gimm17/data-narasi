@@ -61,13 +61,17 @@ const selectedToneInfo = computed(() =>
 </script>
 
 <template>
-    <Head title="Upload Data" />
+    <Head title="Upload Data CSV/Excel — DataNarasi">
+        <meta name="description" content="Upload file CSV atau Excel ke DataNarasi untuk cleansing otomatis, chart interaktif, statistik detail, dan narasi insight bisnis berbasis AI." />
+        <meta property="og:title" content="Upload Data CSV/Excel — DataNarasi" />
+        <meta property="og:description" content="Mulai analisis data AI: upload file, pilih tipe analisis, dan dapatkan insight otomatis dalam Bahasa Indonesia." />
+    </Head>
 
     <AppLayout>
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12">
             <!-- Header -->
             <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                     Upload Data
                 </h1>
                 <p class="mt-1 text-sm text-gray-500">
@@ -99,13 +103,13 @@ const selectedToneInfo = computed(() =>
                     </label>
                     <p class="text-xs text-gray-400 mb-3">Pilih jenis data yang paling sesuai untuk hasil analisis optimal</p>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                         <button
                             v-for="type in analysisTypes"
                             :key="type.value"
                             type="button"
                             @click="selectAnalysisType(type.value)"
-                            class="relative text-left px-3.5 py-3 rounded-xl border-2 transition-all duration-150 hover:shadow-sm group"
+                            class="relative text-left min-h-[92px] px-3.5 py-3 rounded-xl border-2 transition-all duration-150 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                             :class="[
                                 selectedAnalysisType === type.value
                                     ? 'border-teal-500 bg-teal-50/60'
@@ -141,13 +145,13 @@ const selectedToneInfo = computed(() =>
                     </label>
                     <p class="text-xs text-gray-400 mb-3">Gaya bahasa untuk narasi hasil analisis</p>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <button
                             v-for="tone in tones"
                             :key="tone.value"
                             type="button"
                             @click="selectTone(tone.value)"
-                            class="relative text-left px-3.5 py-3 rounded-xl border-2 transition-all duration-150 hover:shadow-sm"
+                            class="relative text-left min-h-[92px] px-3.5 py-3 rounded-xl border-2 transition-all duration-150 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                             :class="[
                                 selectedTone === tone.value
                                     ? 'border-teal-500 bg-teal-50/60'
@@ -184,7 +188,7 @@ const selectedToneInfo = computed(() =>
                         v-model="form.title"
                         type="text"
                         placeholder="Contoh: Laporan Penjualan Q1 2025"
-                        class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors"
+                        class="w-full min-h-11 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors"
                         :class="{ 'border-red-500': form.errors.title }"
                     />
                     <p v-if="form.errors.title" class="mt-2 text-sm text-red-600">
@@ -196,18 +200,18 @@ const selectedToneInfo = computed(() =>
                 </div>
 
                 <!-- ═══ SUBMIT ═══ -->
-                <div class="flex items-center justify-between pt-2">
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
                     <button
                         type="button"
                         @click="form.reset(); selectedAnalysisType = 'umum'; selectedTone = 'formal'"
-                        class="text-sm text-gray-500 hover:text-gray-700 font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        class="w-full sm:w-auto text-sm text-gray-500 hover:text-gray-700 font-medium px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
                     >
                         Reset
                     </button>
                     <button
                         type="submit"
                         :disabled="isSubmitDisabled"
-                        class="px-6 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        class="w-full sm:w-auto min-h-11 px-6 py-3 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                     >
                         <span v-if="form.processing" class="flex items-center gap-2">
                             <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -52,6 +52,12 @@ const logout = () => {
 
 // Mobile menu
 const showMobileMenu = ref(false)
+const toggleMobileMenu = () => {
+    showMobileMenu.value = !showMobileMenu.value
+}
+const closeMobileMenu = () => {
+    showMobileMenu.value = false
+}
 
 onMounted(() => {
     document.addEventListener('click', closeDropdown)
@@ -65,9 +71,9 @@ onUnmounted(() => {
 <template>
     <Head :title="title" />
 
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50 flex flex-col">
         <!-- Topbar -->
-        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <nav class="bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <!-- Logo -->
@@ -247,8 +253,13 @@ onUnmounted(() => {
                             </Link>
                         </template>
 
-                        <!-- Mobile menu button -->
-                        <button @click="showMobileMenu = !showMobileMenu" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                        <button
+                            @click="toggleMobileMenu"
+                            class="md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-gray-100 text-gray-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
+                            :aria-expanded="showMobileMenu"
+                            aria-controls="mobile-navigation"
+                            :aria-label="showMobileMenu ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
+                        >
                             <svg v-if="!showMobileMenu" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
                                 <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -272,19 +283,18 @@ onUnmounted(() => {
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-2"
             >
-                <div v-if="showMobileMenu" class="md:hidden border-t border-gray-100 bg-white">
-                    <div class="px-4 py-3 space-y-1">
-                        <Link :href="route('upload.create')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('upload.*') }">Upload</Link>
-                        <Link :href="route('reports.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('reports.*') }">Riwayat</Link>
-                        <Link v-if="isAdmin" :href="route('dashboard')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('dashboard') }">Dashboard</Link>
-                        <Link v-if="isAdmin" :href="route('admin.ai-providers.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('admin.*') }">AI Providers</Link>
+                <div v-if="showMobileMenu" id="mobile-navigation" class="md:hidden border-t border-gray-100 bg-white shadow-lg">
+                    <div class="px-4 py-4 space-y-2">
+                        <Link :href="route('upload.create')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('upload.*') }" @click="closeMobileMenu">Upload Data</Link>
+                        <Link :href="route('reports.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('reports.*') }" @click="closeMobileMenu">Riwayat Analisis</Link>
+                        <Link v-if="isAdmin" :href="route('dashboard')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('dashboard') }" @click="closeMobileMenu">Dashboard Admin</Link>
+                        <Link v-if="isAdmin" :href="route('admin.ai-providers.index')" class="mobile-nav-link" :class="{ 'mobile-nav-active': route().current('admin.*') }" @click="closeMobileMenu">AI Providers</Link>
                     </div>
                 </div>
             </Transition>
         </nav>
 
-        <!-- Main Content -->
-        <main class="py-6">
+        <main class="flex-1 py-4 sm:py-6 overflow-x-hidden">
             <slot />
         </main>
 
@@ -338,12 +348,14 @@ onUnmounted(() => {
 }
 
 .mobile-nav-link {
-    display: block;
-    padding: 0.625rem 0.75rem;
-    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0.75rem 0.875rem;
+    border-radius: 0.75rem;
     font-size: 0.9375rem;
-    font-weight: 500;
-    color: #4b5563;
+    font-weight: 600;
+    color: #374151;
     transition: all 0.15s;
 }
 

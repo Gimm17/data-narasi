@@ -176,19 +176,24 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
 </script>
 
 <template>
-    <Head :title="report.title || 'Detail Report'" />
+    <Head :title="`${report.title || 'Detail Report'} — DataNarasi`">
+        <meta name="description" :content="`Laporan analisis DataNarasi untuk ${report.original_filename}: chart interaktif, statistik detail, kualitas data, dan narasi insight AI.`" />
+        <meta property="og:title" :content="`${report.title || 'Detail Report'} — DataNarasi`" />
+        <meta property="og:description" :content="`Ringkasan hasil analisis data ${report.original_filename} dengan visualisasi dan insight AI.`" />
+        <meta name="robots" content="noindex, follow" />
+    </Head>
 
     <AppLayout>
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-12 overflow-x-hidden">
 
             <!-- ═══ HEADER ═══ -->
             <div class="mb-8">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight break-words">
                             {{ report.title || report.original_filename }}
                         </h1>
-                        <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400 break-words">
                             <span>{{ formattedDate }}</span>
                             <span>·</span>
                             <span>{{ report.original_filename }}</span>
@@ -196,7 +201,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                             <span>{{ datasetLabel }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
+                    <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
                         <span class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700">
                             ✓ Selesai
                         </span>
@@ -211,22 +216,22 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
             </div>
 
             <!-- ═══ QUICK STATS ═══ -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6 sm:mb-8">
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Total Baris</div>
-                    <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+                    <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ report.total_rows.toLocaleString('id-ID') }}
                     </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Baris Bersih</div>
-                    <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+                    <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ report.clean_rows.toLocaleString('id-ID') }}
                     </div>
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Kualitas Data</div>
-                    <div class="text-2xl font-bold mt-1.5 tabular-nums" :class="{
+                    <div class="text-xl sm:text-2xl font-bold mt-1.5 tabular-nums" :class="{
                         'text-emerald-600': cleanPercentage >= 90,
                         'text-amber-600': cleanPercentage >= 70 && cleanPercentage < 90,
                         'text-red-600': cleanPercentage < 70
@@ -236,7 +241,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                 </div>
                 <div class="rounded-xl border border-gray-200 bg-white px-4 py-4">
                     <div class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Waktu Proses</div>
-                    <div class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+                    <div class="text-xl sm:text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
                         {{ processingTime }}
                     </div>
                 </div>
@@ -247,7 +252,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                 <!-- Tab switcher (only if both exist) -->
                 <div
                     v-if="(topProductsChart || numericDistChart) && hasStaticCharts"
-                    class="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit"
+                    class="flex w-full sm:w-fit gap-1 mb-4 bg-gray-100 rounded-lg p-1 overflow-x-auto"
                 >
                     <button
                         @click="activeTab = 'interactive'"
@@ -386,9 +391,9 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                         <div
                             v-for="output in report.outputs"
                             :key="output.id"
-                            class="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
+                            class="px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-gray-50/50 transition-colors"
                         >
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
                                 <span class="text-xl">{{ (outputMeta[output.output_type] || { icon: '📁' }).icon }}</span>
                                 <div>
                                     <div class="text-sm font-medium text-gray-800">
@@ -396,18 +401,18 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <a
                                     :href="getOutputUrl(output)"
                                     target="_blank"
-                                    class="text-xs font-medium text-teal-700 hover:text-teal-800 px-3 py-1.5 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
+                                    class="flex-1 sm:flex-none text-center text-xs font-medium text-teal-700 hover:text-teal-800 px-3 py-2 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
                                 >
                                     Unduh
                                 </a>
                                 <button
                                     v-if="output.share_token"
                                     @click="navigator.clipboard.writeText(window.location.origin + '/share/' + output.share_token)"
-                                    class="text-xs font-medium text-gray-500 hover:text-gray-700 px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                    class="flex-1 sm:flex-none text-xs font-medium text-gray-500 hover:text-gray-700 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                     Salin Link
                                 </button>
@@ -418,7 +423,7 @@ const activeTab = ref<'interactive' | 'static'>('interactive')
             </div>
 
             <!-- ═══ FOOTER ACTIONS ═══ -->
-            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-6 border-t border-gray-200">
                 <button
                     @click="router.visit(route('reports.index'))"
                     class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
