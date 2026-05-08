@@ -20,7 +20,7 @@ class OpenRouterProvider(BaseAIProvider):
     Compatible dengan OpenAI SDK.
     """
 
-    DEFAULT_MODEL = "google/gemini-2.5-flash"
+    DEFAULT_MODEL = "openai/gpt-5.5"
 
     def __init__(self, api_key: str, model: str = None):
         super().__init__(api_key)

@@ -87,7 +87,7 @@ class AIProviderSeeder extends Seeder
             [
                 'name' => 'OpenRouter',
                 'slug' => 'openrouter',
-                'model_id' => 'google/gemini-2.5-flash',
+                'model_id' => 'openai/gpt-5.5',
                 'base_url' => 'https://openrouter.ai/api/v1',
                 'api_key_env' => 'OPENROUTER_API_KEY',
                 'priority' => 7,
