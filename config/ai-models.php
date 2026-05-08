@@ -192,4 +192,52 @@ return [
         ['id' => 'claude-3-haiku-20240307', 'name' => 'Claude 3 Haiku', 'desc' => 'Cheapest, fastest Claude'],
     ],
 
+    // ────────────────────────────────────────────────
+    // OPENROUTER — Source: https://openrouter.ai/models
+    // Unified API gateway ke 300+ model via satu API key.
+    // Admin bisa ketik model ID custom yang tidak ada di daftar.
+    // ────────────────────────────────────────────────
+    'openrouter' => [
+        // ── Google (via OpenRouter) ──
+        ['id' => 'google/gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'desc' => '✅ Free — Google, cepat, reasoning'],
+        ['id' => 'google/gemini-2.5-pro-preview', 'name' => 'Gemini 2.5 Pro', 'desc' => '💰 Paid — Google, terkuat'],
+        ['id' => 'google/gemma-3-27b-it', 'name' => 'Gemma 3 27B', 'desc' => '✅ Free — Google open model'],
+
+        // ── DeepSeek ──
+        ['id' => 'deepseek/deepseek-chat-v3-0324', 'name' => 'DeepSeek V3', 'desc' => '✅ Free — General chat'],
+        ['id' => 'deepseek/deepseek-r1', 'name' => 'DeepSeek R1', 'desc' => '✅ Free — Reasoning model'],
+        ['id' => 'deepseek/deepseek-r1-0528', 'name' => 'DeepSeek R1 (0528)', 'desc' => '✅ Free — Terbaru'],
+
+        // ── Meta Llama ──
+        ['id' => 'meta-llama/llama-4-maverick', 'name' => 'Llama 4 Maverick', 'desc' => '✅ Free — 400B MoE'],
+        ['id' => 'meta-llama/llama-4-scout', 'name' => 'Llama 4 Scout', 'desc' => '✅ Free — 109B MoE'],
+        ['id' => 'meta-llama/llama-3.3-70b-instruct', 'name' => 'Llama 3.3 70B', 'desc' => '✅ Free — Stabil'],
+
+        // ── Qwen ──
+        ['id' => 'qwen/qwen3-235b-a22b', 'name' => 'Qwen 3 235B', 'desc' => '✅ Free — Terkuat dari Qwen'],
+        ['id' => 'qwen/qwen3-32b', 'name' => 'Qwen 3 32B', 'desc' => '✅ Free — Ringan, cepat'],
+        ['id' => 'qwen/qwen3-30b-a3b', 'name' => 'Qwen 3 30B MoE', 'desc' => '✅ Free — Efisien'],
+
+        // ── Mistral ──
+        ['id' => 'mistralai/mistral-small-3.2-24b-instruct', 'name' => 'Mistral Small 3.2', 'desc' => '✅ Free — 24B'],
+
+        // ── Microsoft ──
+        ['id' => 'microsoft/phi-4-reasoning', 'name' => 'Phi-4 Reasoning', 'desc' => '✅ Free — Microsoft reasoning'],
+        ['id' => 'microsoft/mai-ds-r1', 'name' => 'MAI DS R1', 'desc' => '✅ Free — Microsoft AI'],
+
+        // ── NVIDIA ──
+        ['id' => 'nvidia/llama-3.1-nemotron-70b-instruct', 'name' => 'Nemotron 70B', 'desc' => '✅ Free — NVIDIA tuned'],
+
+        // ── OpenAI (Paid) ──
+        ['id' => 'openai/gpt-4.1-mini', 'name' => 'GPT-4.1 Mini', 'desc' => '💰 Paid — OpenAI, cepat'],
+        ['id' => 'openai/gpt-4.1-nano', 'name' => 'GPT-4.1 Nano', 'desc' => '💰 Paid — OpenAI, tercepat'],
+        ['id' => 'openai/gpt-4o', 'name' => 'GPT-4o', 'desc' => '💰 Paid — OpenAI multimodal'],
+        ['id' => 'openai/o3-mini', 'name' => 'O3 Mini', 'desc' => '💰 Paid — OpenAI reasoning'],
+
+        // ── Anthropic (Paid via OpenRouter) ──
+        ['id' => 'anthropic/claude-sonnet-4', 'name' => 'Claude Sonnet 4', 'desc' => '💰 Paid — Anthropic terbaru'],
+        ['id' => 'anthropic/claude-3.5-sonnet', 'name' => 'Claude 3.5 Sonnet', 'desc' => '💰 Paid — Stabil'],
+        ['id' => 'anthropic/claude-haiku-4', 'name' => 'Claude Haiku 4', 'desc' => '💰 Paid — Cepat, murah'],
+    ],
+
 ];

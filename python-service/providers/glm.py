@@ -23,7 +23,7 @@ class GLMProvider(BaseAIProvider):
             base_url="https://api.z.ai/api/coding/paas/v4"
         )
 
-    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024) -> str:
+    def generate(self, prompt: str, system_prompt: str, max_tokens: int = 1024, model_id: str = None) -> str:
         """
         Generate narasi menggunakan GLM API
 
@@ -39,13 +39,14 @@ class GLMProvider(BaseAIProvider):
             Exception: Jika gagal
         """
         try:
-            logger.info("Using GLM provider")
+            active_model = model_id or "GLM-4.5-air"
+            logger.info(f"Using GLM provider (model: {active_model})")
 
             # PENTING: Instruksi eksplisit untuk Bahasa Indonesia di AWAL prompt
             indo_instruction = "\n\nPENTING: Jawab HANYA dalam Bahasa Indonesia. Jangan gunakan bahasa Mandarin atau bahasa lain sama sekali."
 
             response = self.client.chat.completions.create(
-                model="GLM-4.5-air",
+                model=active_model,
                 messages=[
                     {"role": "system", "content": system_prompt + indo_instruction},
                     {"role": "user", "content": prompt + indo_instruction}

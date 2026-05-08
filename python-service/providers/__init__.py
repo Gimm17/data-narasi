@@ -10,6 +10,7 @@ from .glm import GLMProvider
 from .claude import ClaudeProvider
 from .nvidia import NvidiaProvider
 from .minimax import MiniMaxProvider
+from .openrouter import OpenRouterProvider
 
 __all__ = [
     'BaseAIProvider',
@@ -18,5 +19,6 @@ __all__ = [
     'GLMProvider',
     'NvidiaProvider',
     'MiniMaxProvider',
-    'ClaudeProvider'
+    'ClaudeProvider',
+    'OpenRouterProvider'
 ]
