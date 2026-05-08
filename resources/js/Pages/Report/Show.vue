@@ -91,11 +91,16 @@ const topProductsPieChart = computed(() => {
 })
 
 // Numeric distribution chart from column_info
+// Excludes index/ID/No columns — they're sequential row numbers with no analytical value
+const indexLikeNames = ['index', 'id', 'no', 'row', 'unnamed: 0', 'unnamed:0', 'sr', 'sno', 's.no', 'sl', 'sl.no', 'serial']
 const numericDistChart = computed(() => {
     const colInfo = props.report.summary_stats?.column_info
     if (!colInfo) return null
 
-    const numCols = Object.values(colInfo).filter((c: any) => c.is_numeric && c.mean != null)
+    const numCols = Object.values(colInfo).filter((c: any) =>
+        c.is_numeric && c.mean != null &&
+        !indexLikeNames.includes(c.name.toLowerCase().trim())
+    )
     if (numCols.length === 0 || numCols.length > 8) return null
 
     return {
