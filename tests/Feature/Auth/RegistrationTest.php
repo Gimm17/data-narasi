@@ -26,6 +26,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // Setelah mendaftar, user diarahkan ke halaman upload.
+        $response->assertRedirect(route('upload.create', absolute: false));
     }
 }
