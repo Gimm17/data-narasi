@@ -179,7 +179,8 @@
 ### 🔑 Database Seeding & Callback Fix
 
 - **DatabaseSeeder.php** — Admin user seeder with `updateOrCreate`:
-  - Email: `admin17@gmail.com`, Password: `<REDACTED_ADMIN_PASSWORD>`, `is_admin: true`.
+  - Email dan password dibaca dari `ADMIN_EMAIL` / `ADMIN_PASSWORD` di `.env`.
+    Kredensial tidak lagi ditulis di dalam kode (repo ini publik).
 - **AIProviderSeeder.php** — 6 providers seeded via `updateOrCreate` (idempotent).
 - **ReportCallbackController.php** — Fixed FK violation (`ai_provider_id = 0`):
   - Now searches by `slug` first, then fallback `name LIKE`.
