@@ -26,13 +26,20 @@ class UploadFileRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Angka batas ukuran dibaca dari config/datanarasi.php supaya validasi
+        // di sini dan pemeriksaan di AnalysisPipeline tidak bisa lagi berbeda.
+        $maxKb = config('datanarasi.max_upload_mb', 10) * 1024;
+
         return [
             'file' => [
                 'required',
                 'file',
+                // CSV kadang diunggah dengan ekstensi .txt. Kedua aturan harus
+                // menyebut ekstensi yang sama, kalau tidak file .txt lolos
+                // mimes: tapi ditolak extensions:.
                 'mimes:csv,txt,xlsx,xls',
-                'extensions:csv,xlsx,xls',
-                'max:10240', // 10MB in kilobytes
+                'extensions:csv,txt,xlsx,xls',
+                'max:' . $maxKb,
             ],
             'analysis_type' => [
                 'required',
@@ -57,12 +64,14 @@ class UploadFileRequest extends FormRequest
      */
     public function messages(): array
     {
+        $maxMb = config('datanarasi.max_upload_mb', 10);
+
         return [
             'file.required' => 'File wajib diupload.',
             'file.file' => 'File harus berupa file yang valid.',
             'file.mimes' => 'Format file harus CSV atau Excel (xlsx, xls).',
             'file.extensions' => 'Ekstensi file harus .csv, .xlsx, atau .xls.',
-            'file.max' => 'Ukuran file maksimal 10MB.',
+            'file.max' => "Ukuran file maksimal {$maxMb} MB.",
 
             'analysis_type.required' => 'Tipe analisis wajib dipilih.',
             'analysis_type.in' => 'Tipe analisis tidak valid.',

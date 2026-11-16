@@ -63,9 +63,13 @@ return [
     | will be used by the PHP date and date-time functions. The timezone
     | is set to "UTC" by default as it is suitable for most use cases.
     |
+    | DataNarasi memakai zona waktu Indonesia (WITA default). Nilai ini WAJIB
+    | dibaca dari env: sebelumnya konstanta 'UTC' membuat APP_TIMEZONE di .env
+    | tidak berpengaruh sama sekali, sehingga jam pada laporan dan dashboard
+    | tampil sebagai waktu UTC.
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------
