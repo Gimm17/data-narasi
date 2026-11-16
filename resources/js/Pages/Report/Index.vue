@@ -73,6 +73,20 @@ const deleteReport = (id: number) => {
 const goToPage = (page: number) => {
     router.get(route('reports.index', { page }))
 }
+
+// Jendela 5 halaman yang mengikuti halaman aktif, bukan selalu 1–5.
+const visiblePages = computed(() => {
+    const last = props.reports.last_page
+    const current = props.reports.current_page
+    const total = Math.min(5, last)
+
+    let start = Math.max(1, current - Math.floor(total / 2))
+    if (start + total - 1 > last) {
+        start = Math.max(1, last - total + 1)
+    }
+
+    return Array.from({ length: total }, (_, i) => start + i)
+})
 </script>
 
 <template>
@@ -228,7 +242,7 @@ const goToPage = (page: number) => {
                     <!-- Page Numbers -->
                     <div class="flex items-center space-x-1">
                         <button
-                            v-for="page in Math.min(5, reports.last_page)"
+                            v-for="page in visiblePages"
                             :key="page"
                             @click="goToPage(page)"
                             class="w-8 h-8 text-sm font-medium border rounded transition-colors"

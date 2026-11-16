@@ -124,10 +124,11 @@ class ReportController extends Controller
         }
 
         // Hapus chart files jika ada
+        // Chart disimpan di disk publik (storage/app/public/charts/{id}), bukan disk default
         if (!empty($report->chart_paths)) {
             foreach ($report->chart_paths as $chartPath) {
-                if (Storage::exists($chartPath)) {
-                    Storage::delete($chartPath);
+                if (Storage::disk('public')->exists($chartPath)) {
+                    Storage::disk('public')->delete($chartPath);
                 }
             }
         }

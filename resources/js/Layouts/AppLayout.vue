@@ -23,6 +23,16 @@ const isAdmin = computed(() => {
     return usePage().props?.auth?.user?.is_admin || false
 })
 
+const flashSuccess = computed(() => {
+    const flash = usePage().props?.flash as { success?: string | null } | undefined
+    return flash?.success || ''
+})
+
+const flashError = computed(() => {
+    const flash = usePage().props?.flash as { error?: string | null } | undefined
+    return flash?.error || ''
+})
+
 const userInitials = computed(() => {
     const name = userName.value
     const parts = name.split(' ')
@@ -304,6 +314,24 @@ onUnmounted(() => {
         </nav>
 
         <main class="flex-1 py-4 sm:py-6 overflow-x-hidden transition-colors duration-300">
+            <!-- Flash message dari controller (->with('success'|'error')) -->
+            <div v-if="flashSuccess || flashError" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+                <div
+                    v-if="flashSuccess"
+                    class="flex items-start gap-2.5 rounded-lg border bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 px-4 py-3"
+                >
+                    <span class="mt-0.5 text-teal-600 dark:text-teal-400" aria-hidden="true">✓</span>
+                    <p class="text-sm text-teal-800 dark:text-teal-200">{{ flashSuccess }}</p>
+                </div>
+                <div
+                    v-if="flashError"
+                    class="flex items-start gap-2.5 rounded-lg border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 px-4 py-3 mt-2"
+                >
+                    <span class="mt-0.5 text-red-600 dark:text-red-400" aria-hidden="true">!</span>
+                    <p class="text-sm text-red-800 dark:text-red-200">{{ flashError }}</p>
+                </div>
+            </div>
+
             <slot />
         </main>
 

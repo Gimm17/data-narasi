@@ -39,6 +39,13 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => (bool) $request->user()->is_admin,
                 ] : null,
             ],
+            // Flash message dikirim controller lewat ->with('success'|'error').
+            // Tanpa dibagikan di sini, pesan itu tidak pernah sampai ke Vue.
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'status' => fn () => $request->session()->get('status'),
+            ],
         ];
     }
 }

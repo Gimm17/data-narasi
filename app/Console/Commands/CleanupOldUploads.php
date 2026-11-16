@@ -65,6 +65,14 @@ class CleanupOldUploads extends Command
                 $report->clean_path,
             ]);
 
+            // Chart disimpan di disk publik; tanpa ini file PNG menumpuk
+            // selamanya di storage/app/public/charts.
+            $chartPaths = is_array($report->chart_paths) ? $report->chart_paths : [];
+
+            if (!$dryRun && $chartPaths !== []) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($chartPaths);
+            }
+
             foreach ($filesToDelete as $filePath) {
                 if (!Storage::exists($filePath)) {
                     continue;

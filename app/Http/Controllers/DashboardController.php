@@ -21,20 +21,20 @@ class DashboardController extends Controller
         $avgProcessingTime = Report::where('status', 'done')->avg('processing_time_ms') ?? 0;
         $totalRows = Report::sum('total_rows');
 
-        // Reports per week (last 8 weeks)
-        $weeklyCounts = Report::selectRaw("
-                YEARWEEK(created_at, 1) as week_key,
-                MIN(DATE(created_at)) as week_start,
-                COUNT(*) as count
-            ")
-            ->where('created_at', '>=', now()->subWeeks(8))
-            ->groupBy('week_key')
-            ->orderBy('week_key')
-            ->get()
-            ->map(fn($r) => [
-                'label' => \Carbon\Carbon::parse($r->week_start)->format('d M'),
-                'count' => $r->count,
-            ]);
+        // Reports per week (8 minggu terakhir).
+        // Dihitung di PHP, bukan YEARWEEK() — fungsi itu tidak ada di SQLite dan
+        // perilakunya beda antar versi MySQL/MariaDB. Jumlah barisnya kecil
+        // (maks. 8 minggu), jadi biayanya tidak berarti.
+        $weeklyCounts = Report::query()
+            ->where('created_at', '>=', now()->subWeeks(8)->startOfWeek())
+            ->pluck('created_at')
+            ->groupBy(fn ($createdAt) => $createdAt->copy()->startOfWeek()->toDateString())
+            ->sortKeys()
+            ->map(fn ($group, $weekStart) => [
+                'label' => \Carbon\Carbon::parse($weekStart)->translatedFormat('d M'),
+                'count' => $group->count(),
+            ])
+            ->values();
 
         // AI provider usage distribution
         $providerUsage = AIUsageLog::where('is_success', true)
