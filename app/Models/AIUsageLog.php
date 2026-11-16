@@ -59,19 +59,21 @@ class AIUsageLog extends Model
     }
 
     /**
-     * Cek apakah request berhasil
+     * Cek apakah request berhasil.
+     * Kolomnya bernama is_success (boolean), bukan status.
      */
     public function isSuccess(): bool
     {
-        return $this->status === 'success';
+        return (bool) $this->is_success;
     }
 
     /**
-     * Cek apakah request gagal karena rate limit
+     * Cek apakah request gagal karena rate limit.
+     * Jenis error tidak punya kolom sendiri — dibaca dari error_message.
      */
     public function isRateLimit(): bool
     {
-        return $this->status === 'rate_limit';
+        return $this->hasErrorMatching('rate');
     }
 
     /**
@@ -79,7 +81,7 @@ class AIUsageLog extends Model
      */
     public function isTimeout(): bool
     {
-        return $this->status === 'timeout';
+        return $this->hasErrorMatching('timeout');
     }
 
     /**
@@ -87,7 +89,9 @@ class AIUsageLog extends Model
      */
     public function isAuthError(): bool
     {
-        return $this->status === 'auth_error';
+        return $this->hasErrorMatching('auth')
+            || $this->hasErrorMatching('unauthorized')
+            || $this->hasErrorMatching('401');
     }
 
     /**
@@ -95,7 +99,19 @@ class AIUsageLog extends Model
      */
     public function isValidationError(): bool
     {
-        return $this->status === 'validation_fail';
+        return $this->hasErrorMatching('validation') || $this->hasErrorMatching('validasi');
+    }
+
+    /**
+     * Apakah error_message mengandung kata tertentu (case-insensitive).
+     */
+    private function hasErrorMatching(string $needle): bool
+    {
+        if ($this->is_success) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower((string) $this->error_message), $needle);
     }
 
     /**

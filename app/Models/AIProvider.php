@@ -25,6 +25,7 @@ class AIProvider extends Model
         'name',
         'slug',
         'model_id',
+        'reasoning_effort',
         'base_url',
         'api_key_env',
         'priority',
@@ -66,39 +67,27 @@ class AIProvider extends Model
     }
 
     /**
-     * Ambil API Key dari environment variable berdasarkan api_key_env
-     * 
-     * CATATAN: Dalam arsitektur microservice, API keys disimpan di Python service.
-     * Method ini hanya untuk backward compatibility dan pengecekan lokal.
-     * Jika key tidak ada di Laravel env, cek apakah ada record di ai_providers
-     * yang menandakan key sudah dikonfigurasi di Python service.
+     * Ambil API Key dari environment variable berdasarkan api_key_env.
+     *
+     * Dibaca via config('ai.keys') agar tetap terbaca setelah config:cache;
+     * fallback ke env() untuk pemakaian lokal.
      */
     public function getApiKey(): ?string
     {
-        // Coba dari Laravel env (untuk local dev)
-        $key = env($this->api_key_env);
+        $fromConfig = config('ai.keys.' . $this->slug);
+        $key = is_string($fromConfig) && trim($fromConfig) !== ''
+            ? $fromConfig
+            : env($this->api_key_env);
 
-        if (!empty($key)) {
-            return $key;
-        }
-
-        // Di production, API keys ada di Python service container
-        // Anggap tersedia jika provider enabled dan api_key_env sudah dikonfigurasi
-        if ($this->is_enabled && !empty($this->api_key_env)) {
-            return '[configured-in-python-service]';
-        }
-
-        return null;
+        return !empty($key) ? trim((string) $key) : null;
     }
 
     /**
-     * Cek apakah provider ini siap digunakan
-     * Harus enabled dan punya api_key_env yang dikonfigurasi
-     * (Pengecekan actual API key dilakukan oleh Python service)
+     * Cek apakah provider ini siap digunakan: enabled + API key tersedia.
      */
     public function isReady(): bool
     {
-        return $this->is_enabled && !empty($this->api_key_env);
+        return $this->is_enabled && $this->getApiKey() !== null;
     }
 
     /**

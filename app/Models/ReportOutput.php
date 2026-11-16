@@ -135,8 +135,11 @@ class ReportOutput extends Model
             return $this->public_url;
         }
 
-        if ($this->share_token) {
-            return route('share.show', $this->share_token);
+        // Route share.show belum ada di aplikasi ini. Membiarkan route()
+        // dipanggil akan melempar RouteNotFoundException dan mematahkan
+        // halaman report — kembalikan URL file langsung sebagai gantinya.
+        if ($this->file_path) {
+            return url('storage/' . ltrim(str_replace('public/', '', $this->file_path), '/'));
         }
 
         return '#';

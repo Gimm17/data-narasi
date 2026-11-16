@@ -51,11 +51,29 @@ class ReportColumn extends Model
     }
 
     /**
-     * Cek apakah kolom ini bertipe numerik
+     * Cek apakah kolom ini bertipe numerik.
+     *
+     * Tabel report_columns hanya punya kolom: id, report_id, name, data_type,
+     * is_nullable, sample_value. Kolom seperti is_numeric / null_count tidak
+     * ada, jadi nilai yang tidak tersedia dibaca lewat helper null-safe.
      */
     public function isNumericType(): bool
     {
-        return $this->is_numeric || in_array($this->data_type, ['integer', 'decimal', 'float']);
+        if (($this->is_numeric ?? null) === true) {
+            return true;
+        }
+
+        return in_array($this->data_type, ['integer', 'decimal', 'float', 'numeric'], true);
+    }
+
+    /**
+     * Ambil nilai kolom bila ada, atau null.
+     */
+    private function attr(string $key): mixed
+    {
+        $attributes = $this->getAttributes();
+
+        return array_key_exists($key, $attributes) ? $attributes[$key] : null;
     }
 
     /**
@@ -64,18 +82,14 @@ class ReportColumn extends Model
      */
     public function hasHighNullCount(): bool
     {
-        if (!$this->report) {
+        $totalRows = (int) ($this->report?->total_rows ?? 0);
+        $nullCount = $this->attr('null_count');
+
+        if ($totalRows === 0 || $nullCount === null) {
             return false;
         }
 
-        $totalRows = $this->report->total_rows;
-        if ($totalRows === 0) {
-            return false;
-        }
-
-        $nullPercentage = ($this->null_count / $totalRows) * 100;
-
-        return $nullPercentage > 20;
+        return (($nullCount / $totalRows) * 100) > 20;
     }
 
     /**
@@ -83,11 +97,14 @@ class ReportColumn extends Model
      */
     public function getRange(): ?string
     {
-        if (!$this->isNumericType() || $this->min_value === null || $this->max_value === null) {
+        $min = $this->attr('min_value');
+        $max = $this->attr('max_value');
+
+        if (!$this->isNumericType() || $min === null || $max === null) {
             return null;
         }
 
-        return "{$this->min_value} - {$this->max_value}";
+        return "{$min} - {$max}";
     }
 
     /**
@@ -95,11 +112,14 @@ class ReportColumn extends Model
      */
     public function getUniquePercentage(): int
     {
-        if (!$this->report || $this->report->total_rows === 0) {
+        $totalRows = (int) ($this->report?->total_rows ?? 0);
+        $unique = $this->attr('unique_count');
+
+        if ($totalRows === 0 || $unique === null) {
             return 0;
         }
 
-        return intval(($this->unique_count / $this->report->total_rows) * 100);
+        return intval(($unique / $totalRows) * 100);
     }
 
     /**
@@ -108,10 +128,14 @@ class ReportColumn extends Model
      */
     public function isCandidateKey(): bool
     {
-        if (!$this->report) {
+        $totalRows = (int) ($this->report?->total_rows ?? 0);
+        $unique = $this->attr('unique_count');
+        $nulls = $this->attr('null_count');
+
+        if ($totalRows === 0 || $unique === null || $nulls === null) {
             return false;
         }
 
-        return $this->unique_count === $this->report->total_rows && $this->null_count === 0;
+        return (int) $unique === $totalRows && (int) $nulls === 0;
     }
 }

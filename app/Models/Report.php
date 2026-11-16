@@ -150,7 +150,7 @@ class Report extends Model
     /**
      * Update status ke failed dengan error message
      */
-    public function markAsFailed(string $errorMessage = null): void
+    public function markAsFailed(?string $errorMessage = null): void
     {
         $this->update([
             'status' => ReportStatus::Failed,
