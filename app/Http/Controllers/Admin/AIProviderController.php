@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AIProvider;
 use App\Models\AIUsageLog;
+use App\Services\Analysis\AiClient;
+use App\Services\Analysis\ApiKeyChecker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -47,6 +49,7 @@ class AIProviderController extends Controller
                 'name' => $provider->name,
                 'slug' => $provider->slug,
                 'model_id' => $provider->model_id,
+                'reasoning_effort' => $provider->reasoning_effort,
                 'is_enabled' => $provider->is_enabled,
                 'priority' => $provider->priority,
                 'api_key_env' => $provider->api_key_env,
@@ -87,6 +90,7 @@ class AIProviderController extends Controller
             'todayStats' => $todayStats,
             'recentFallbacks' => $recentFallbacks,
             'modelCatalog' => config('ai-models', []),
+            'reasoningEfforts' => AiClient::reasoningEfforts(),
         ]);
     }
 
@@ -159,6 +163,7 @@ class AIProviderController extends Controller
             'api_key_env' => 'sometimes|string|max:100',
             'api_key_value' => 'nullable|string|max:500',
             'model_id' => 'sometimes|string|max:200',
+            'reasoning_effort' => ['sometimes', 'nullable', 'string', Rule::in(AiClient::reasoningEfforts())],
             'max_tokens' => 'sometimes|integer|min:100|max:32000',
             'timeout_seconds' => 'sometimes|integer|min:5|max:300',
             'priority' => 'sometimes|integer|min:1|max:20',
@@ -169,6 +174,11 @@ class AIProviderController extends Controller
             ->except('api_key_value')
             ->filter(fn ($v) => $v !== null)
             ->toArray();
+
+        // reasoning_effort boleh dikosongkan (null) untuk kembali ke default provider
+        if (array_key_exists('reasoning_effort', $validated) && $validated['reasoning_effort'] === null) {
+            $updateData['reasoning_effort'] = null;
+        }
 
         if (!empty($updateData)) {
             $provider->update($updateData);
@@ -187,8 +197,145 @@ class AIProviderController extends Controller
     }
 
     /**
+     * Ambil daftar model terbaru langsung dari provider (GET /models).
+     *
+     * Dipakai panel admin agar model bisa dicek dan diganti tanpa
+     * memperbarui katalog manual.
+     */
+    public function models(AIProvider $provider, ApiKeyChecker $checker)
+    {
+        $apiKey = trim((string) (config('ai.keys.' . $provider->slug)
+            ?? env($provider->api_key_env)));
+
+        if ($apiKey === '') {
+            return response()->json([
+                'success' => false,
+                'error' => "API key belum diset. Tambahkan {$provider->api_key_env} di file .env",
+                'models' => [],
+            ], 422);
+        }
+
+        try {
+            $models = $checker->listModels((string) $provider->slug, $apiKey);
+
+            return response()->json([
+                'success' => true,
+                'provider' => $provider->slug,
+                'current_model' => $provider->model_id,
+                'count' => count($models),
+                'models' => $models,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Gagal mengambil model {$provider->name}: {$e->getMessage()}");
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'models' => [],
+            ], 502);
+        }
+    }
+
+    /**
+     * Bandingkan hasil narasi untuk beberapa tingkat reasoning_effort.
+     *
+     * Mengirim prompt identik ke model yang sama dengan effort berbeda,
+     * lalu mengembalikan hasil per tingkat agar admin dapat membandingkan
+     * panjang, waktu, token berpikir, dan isi narasinya.
+     */
+    public function compareReasoning(Request $request, AIProvider $provider, AiClient $client)
+    {
+        $validated = $request->validate([
+            'prompt' => 'required|string|min:10|max:4000',
+            'efforts' => 'required|array|min:2|max:5',
+            'efforts.*' => ['string', Rule::in(AiClient::reasoningEfforts())],
+        ]);
+
+        // Membandingkan 5 tingkat bisa memakan 5 × timeout AI (ratusan detik).
+        // Tanpa ini, request diputus di tengah jalan oleh max_execution_time
+        // server dan admin hanya melihat halaman error.
+        @set_time_limit(600);
+
+        $apiKey = trim((string) (config('ai.keys.' . $provider->slug)
+            ?? env($provider->api_key_env)));
+
+        if ($apiKey === '') {
+            return response()->json([
+                'success' => false,
+                'error' => "API key belum diset untuk {$provider->name}.",
+            ], 422);
+        }
+
+        $maxTokens = (int) ($provider->max_tokens ?: config('ai.max_tokens', 2048));
+        $results = [];
+
+        foreach ($validated['efforts'] as $effort) {
+            $startedAt = microtime(true);
+
+            try {
+                $response = $client->generate(
+                    $validated['prompt'],
+                    'Anda analis data senior berbahasa Indonesia. Jawab HANYA dalam Bahasa Indonesia. Setiap klaim didukung angka.',
+                    $maxTokens,
+                    [[
+                        'slug' => $provider->slug,
+                        'model_id' => $provider->model_id,
+                        'reasoning_effort' => $effort,
+                    ]]
+                );
+            } catch (\Throwable $e) {
+                // Satu tingkat gagal tidak boleh menggagalkan seluruh perbandingan
+                $results[] = [
+                    'effort' => $effort,
+                    'success' => false,
+                    'narrative' => '',
+                    'words' => 0,
+                    'prompt_tokens' => 0,
+                    'completion_tokens' => 0,
+                    'total_tokens' => 0,
+                    'cost_usd' => 0,
+                    'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                    'status' => 'error',
+                    'error_message' => $e->getMessage(),
+                ];
+
+                continue;
+            }
+
+            $results[] = [
+                'effort' => $effort,
+                'success' => $response['success'],
+                'narrative' => $response['narrative'],
+                'words' => str_word_count($response['narrative']),
+                'prompt_tokens' => $response['prompt_tokens'] ?? 0,
+                'completion_tokens' => $response['completion_tokens'] ?? 0,
+                'total_tokens' => $response['total_tokens'] ?? 0,
+                'cost_usd' => $response['cost_usd'] ?? 0,
+                'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                'status' => $response['logs'][0]['status'] ?? 'error',
+                'error_message' => $response['logs'][0]['error_message'] ?? null,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'provider' => $provider->slug,
+            'model' => $provider->model_id,
+            'results' => $results,
+        ]);
+    }
+
+    /**
      * Update nilai di .env file
      * Hanya bisa diakses admin — aman karena dilindungi middleware
+     */
+    /**
+     * Update nilai di .env file
+     * Hanya bisa diakses admin — aman karena dilindungi middleware
+     *
+     * PENTING: setelah .env berubah, config yang sedang ter-cache masih
+     * menyimpan nilai lama. Tanpa menghapus cache, perubahan tidak berlaku
+     * sampai admin menjalankan `php artisan optimize:clear` manual.
      */
     private function updateEnvValue(string $key, string $value): void
     {
@@ -198,72 +345,61 @@ class AIProviderController extends Controller
             return;
         }
 
-        $envContent = file_get_contents($envPath);
+        $envContent = (string) file_get_contents($envPath);
 
-        // Escape value jika mengandung spasi atau karakter khusus
-        $escapedValue = str_contains($value, ' ') ? "\"{$value}\"" : $value;
+        // Escape nilai agar '/' dan '\' tidak ditafsirkan sebagai pembatas regex
+        $pattern = '/^' . preg_quote($key, '/') . '=.*/m';
 
-        // Check if key exists
-        if (preg_match("/^{$key}=.*/m", $envContent)) {
-            // Replace existing
-            $envContent = preg_replace(
-                "/^{$key}=.*/m",
-                "{$key}={$escapedValue}",
-                $envContent
-            );
+        $escapedValue = preg_match('/[\s"\'#]/', $value) ? '"' . addslashes($value) . '"' : $value;
+
+        if (preg_match($pattern, $envContent)) {
+            $envContent = (string) preg_replace($pattern, $key . '=' . $escapedValue, $envContent);
         } else {
-            // Append new key
-            $envContent .= "\n{$key}={$escapedValue}";
+            $envContent .= "\n{$key}={$escapedValue}\n";
         }
 
-        file_put_contents($envPath, $envContent);
+        file_put_contents($envPath, $envContent, LOCK_EX);
+
+        // Terapkan segera: buang cache config lama lalu bangun ulang
+        try {
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:cache');
+        } catch (\Throwable $e) {
+            // Shared hosting terkadang melarang tulis ke bootstrap/cache.
+            // Perubahan tetap tersimpan di .env untuk diterapkan manual.
+            \Illuminate\Support\Facades\Log::warning('Gagal membangun ulang config cache: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Check API key health: validitas, balance, rate limits
-     * Proxy ke Python service /check-api-key
+     * Check API key health: validitas, balance, rate limits.
+     * Dijalankan langsung di PHP (dulu proxy ke Python service).
      */
-    public function checkApiKey(AIProvider $provider)
+    public function checkApiKey(AIProvider $provider, ApiKeyChecker $checker)
     {
         try {
-            // Baca API key dari .env
-            $apiKey = env($provider->api_key_env);
+            // Baca API key dari config (aman setelah config:cache), fallback ke env()
+            $apiKey = trim((string) (config('ai.keys.' . $provider->slug)
+                ?? env($provider->api_key_env)));
 
-            if (empty($apiKey)) {
+            if ($apiKey === '') {
                 return response()->json([
                     'valid' => false,
                     'error' => "API key belum diset. Tambahkan {$provider->api_key_env} di file .env",
-                    'checked_at' => now()->toISOString(),
+                    'checked_at' => now()->toIso8601String(),
                 ]);
             }
 
-            // Kirim request ke Python service
-            $pythonUrl = config('python-service.url', 'http://localhost:8001');
-
-            $response = Http::timeout(15)
-                ->post("{$pythonUrl}/check-api-key", [
-                    'slug' => $provider->slug,
-                    'api_key' => $apiKey,
-                    'model_id' => $provider->model_id,
-                ]);
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-
-            return response()->json([
-                'valid' => false,
-                'error' => 'Python service error: ' . $response->status(),
-                'checked_at' => now()->toISOString(),
-            ]);
-
+            return response()->json(
+                $checker->check((string) $provider->slug, $apiKey, $provider->model_id)
+            );
         } catch (\Exception $e) {
             Log::error("API key check failed for {$provider->name}: {$e->getMessage()}");
 
             return response()->json([
                 'valid' => false,
-                'error' => 'Tidak bisa terhubung ke Python service: ' . $e->getMessage(),
-                'checked_at' => now()->toISOString(),
+                'error' => 'Pemeriksaan gagal: ' . $e->getMessage(),
+                'checked_at' => now()->toIso8601String(),
             ]);
         }
     }

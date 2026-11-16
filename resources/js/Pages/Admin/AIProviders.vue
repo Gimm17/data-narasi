@@ -44,6 +44,7 @@ const props = defineProps<{
         created_at: string
     }>
     modelCatalog: Record<string, Array<{ id: string; name: string; desc: string }>>
+    reasoningEfforts: string[]
 }>()
 
 // ── Stats ──
@@ -62,6 +63,7 @@ const editingProvider = reactive({
     api_key_env: '',
     api_key_value: '',
     model_id: '',
+    reasoning_effort: '' as string,
     max_tokens: 1024,
     timeout_seconds: 30,
     priority: 1,
@@ -71,6 +73,69 @@ const saveMessage = ref('')
 const showModelDropdown = ref(false)
 const modelSearch = ref('')
 
+// ── Daftar model langsung dari provider (GET /models) ──
+const liveModels = ref<Array<{ id: string; name: string; desc: string }>>([])
+const isLoadingModels = ref(false)
+const liveModelError = ref('')
+
+// ── Bandingkan reasoning effort ──
+const showCompare = ref(false)
+const comparePrompt = ref(
+    'Buat narasi analisis penjualan 3 paragraf dari data berikut: total revenue 1.234.567 dari 198 transaksi, ' +
+    'rata-rata 6.235, median 5.900, produk terlaris Kopi Susu 32 persen, kategori Minuman 75 persen, ' +
+    '7 outlier terdeteksi. Sertakan minimal 3 rekomendasi.'
+)
+const compareEfforts = ref<string[]>(['none', 'low', 'high'])
+const compareResults = ref<Array<Record<string, any>>>([])
+const isComparing = ref(false)
+const compareError = ref('')
+
+const toggleCompareEffort = (effort: string) => {
+    const list = compareEfforts.value
+    const i = list.indexOf(effort)
+    if (i >= 0) {
+        if (list.length > 2) list.splice(i, 1)
+    } else if (list.length < 5) {
+        list.push(effort)
+    }
+}
+
+const runCompare = async () => {
+    isComparing.value = true
+    compareError.value = ''
+    compareResults.value = []
+    try {
+        const { data } = await axios.post(
+            route('admin.ai-providers.compare-reasoning', editingProvider.id),
+            { prompt: comparePrompt.value, efforts: compareEfforts.value },
+            { timeout: 300000 }
+        )
+        compareResults.value = data.results || []
+    } catch (error: any) {
+        compareError.value = error?.response?.data?.error
+            || error?.response?.data?.message
+            || 'Perbandingan gagal dijalankan.'
+    } finally {
+        isComparing.value = false
+    }
+}
+
+const fetchLiveModels = async () => {
+    if (!editingProvider.id) return
+    isLoadingModels.value = true
+    liveModelError.value = ''
+    try {
+        const { data } = await axios.get(route('admin.ai-providers.models', editingProvider.id))
+        liveModels.value = data.models || []
+        showModelDropdown.value = true
+    } catch (error: any) {
+        liveModels.value = []
+        liveModelError.value = error?.response?.data?.error || 'Gagal mengambil daftar model dari provider.'
+    } finally {
+        isLoadingModels.value = false
+    }
+}
+
 const openEditModal = (provider: any) => {
     editingProvider.id = provider.id
     editingProvider.name = provider.name
@@ -78,6 +143,7 @@ const openEditModal = (provider: any) => {
     editingProvider.api_key_env = provider.api_key_env
     editingProvider.api_key_value = ''
     editingProvider.model_id = provider.model_id
+    editingProvider.reasoning_effort = provider.reasoning_effort || ''
     editingProvider.max_tokens = provider.max_tokens
     editingProvider.timeout_seconds = provider.timeout_seconds
     editingProvider.priority = provider.priority
@@ -85,11 +151,14 @@ const openEditModal = (provider: any) => {
     showModelDropdown.value = false
     modelSearch.value = ''
     saveMessage.value = ''
+    liveModels.value = []
+    liveModelError.value = ''
 }
 
 const availableModels = computed(() => {
     const slug = editingProvider.slug
-    const models = props.modelCatalog[slug] || []
+    // Utamakan hasil /models langsung dari provider bila sudah diambil
+    const models = liveModels.value.length > 0 ? liveModels.value : (props.modelCatalog[slug] || [])
     if (!modelSearch.value) return models
     const q = modelSearch.value.toLowerCase()
     return models.filter(m => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q))
@@ -113,6 +182,8 @@ const saveProvider = async () => {
     try {
         const payload: Record<string, any> = {
             model_id: editingProvider.model_id,
+            // String kosong = kembali ke default provider (null di DB)
+            reasoning_effort: editingProvider.reasoning_effort || null,
             max_tokens: editingProvider.max_tokens,
             timeout_seconds: editingProvider.timeout_seconds,
             priority: editingProvider.priority,
@@ -523,7 +594,17 @@ const getHealthBadge = (providerId: number) => {
 
                         <!-- Model ID -->
                         <div class="relative">
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Model ID</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-medium text-gray-500">Model ID</label>
+                                <button
+                                    @click="fetchLiveModels"
+                                    :disabled="isLoadingModels"
+                                    type="button"
+                                    class="text-[11px] font-medium text-teal-600 hover:text-teal-700 disabled:text-gray-400 transition-colors"
+                                >
+                                    {{ isLoadingModels ? 'Mengambil…' : 'Ambil dari provider' }}
+                                </button>
+                            </div>
                             <div class="flex gap-2">
                                 <input
                                     v-model="editingProvider.model_id"
@@ -543,6 +624,11 @@ const getHealthBadge = (providerId: number) => {
                                     </svg>
                                 </button>
                             </div>
+
+                            <p v-if="liveModelError" class="text-[10px] text-red-500 mt-1">{{ liveModelError }}</p>
+                            <p v-else-if="liveModels.length > 0" class="text-[10px] text-gray-400 mt-1">
+                                {{ liveModels.length }} model tersedia langsung dari provider.
+                            </p>
 
                             <!-- Model Dropdown -->
                             <div
@@ -579,6 +665,94 @@ const getHealthBadge = (providerId: number) => {
                             <p v-if="!modelCatalog[editingProvider.slug]" class="text-[10px] text-gray-400 mt-1">
                                 Katalog model belum tersedia untuk provider ini. Ketik model ID manual.
                             </p>
+                        </div>
+
+                        <!-- Reasoning Effort -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-medium text-gray-500">Reasoning Effort</label>
+                                <button
+                                    @click="showCompare = !showCompare"
+                                    type="button"
+                                    class="text-[11px] font-medium text-teal-600 hover:text-teal-700 transition-colors"
+                                >
+                                    {{ showCompare ? 'Tutup perbandingan' : 'Bandingkan hasil' }}
+                                </button>
+                            </div>
+                            <select
+                                v-model="editingProvider.reasoning_effort"
+                                class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors"
+                            >
+                                <option value="">Default provider</option>
+                                <option v-for="eff in reasoningEfforts" :key="eff" :value="eff">{{ eff }}</option>
+                            </select>
+                            <p class="text-[10px] text-gray-400 mt-1">
+                                Semakin tinggi, semakin banyak token dipakai untuk berpikir dan narasi bisa terpotong.
+                                Tidak semua model menerima semua nilai — bila ditolak, sistem otomatis mengulang tanpa parameter.
+                            </p>
+
+                            <!-- Panel bandingkan -->
+                            <div v-if="showCompare" class="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50/60">
+                                <label class="block text-[11px] font-medium text-gray-500 mb-1">Prompt uji</label>
+                                <textarea
+                                    v-model="comparePrompt"
+                                    rows="3"
+                                    class="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                ></textarea>
+
+                                <label class="block text-[11px] font-medium text-gray-500 mt-2 mb-1">
+                                    Tingkat yang dibandingkan (pilih 2–5)
+                                </label>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button
+                                        v-for="eff in reasoningEfforts"
+                                        :key="eff"
+                                        @click="toggleCompareEffort(eff)"
+                                        type="button"
+                                        class="px-2 py-1 text-[11px] rounded-md border transition-colors"
+                                        :class="compareEfforts.includes(eff)
+                                            ? 'bg-teal-600 border-teal-600 text-white'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'"
+                                    >
+                                        {{ eff }}
+                                    </button>
+                                </div>
+
+                                <button
+                                    @click="runCompare"
+                                    :disabled="isComparing || compareEfforts.length < 2"
+                                    type="button"
+                                    class="mt-2.5 w-full text-xs font-medium bg-teal-600 text-white rounded-lg py-2 hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {{ isComparing ? 'Menjalankan… (bisa 1–2 menit)' : 'Jalankan perbandingan' }}
+                                </button>
+
+                                <p v-if="compareError" class="text-[11px] text-red-500 mt-2">{{ compareError }}</p>
+
+                                <div v-if="compareResults.length" class="mt-3 space-y-2">
+                                    <div
+                                        v-for="r in compareResults"
+                                        :key="r.effort"
+                                        class="bg-white border border-gray-200 rounded-lg p-2.5"
+                                    >
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[11px] font-semibold text-gray-800 uppercase tracking-wide">{{ r.effort }}</span>
+                                            <span
+                                                class="text-[10px] px-1.5 py-0.5 rounded"
+                                                :class="r.success ? 'bg-teal-50 text-teal-700' : 'bg-red-50 text-red-600'"
+                                            >{{ r.success ? 'berhasil' : r.status }}</span>
+                                        </div>
+                                        <div class="grid grid-cols-4 gap-1 mt-1.5 text-[10px] text-gray-500 tabular-nums">
+                                            <span>{{ r.words }} kata</span>
+                                            <span>{{ r.completion_tokens }} tok</span>
+                                            <span>{{ (r.response_time_ms / 1000).toFixed(1) }}s</span>
+                                            <span>${{ Number(r.cost_usd).toFixed(5) }}</span>
+                                        </div>
+                                        <p v-if="r.error_message" class="text-[10px] text-red-500 mt-1">{{ r.error_message }}</p>
+                                        <p v-else class="text-[11px] text-gray-600 mt-1.5 line-clamp-4">{{ r.narrative }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Max Tokens + Timeout -->

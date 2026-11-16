@@ -40,7 +40,11 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Harus LEBIH BESAR dari $timeout job (240) dan --timeout worker
+            // (230). Bila lebih kecil, job yang masih berjalan akan diambil
+            // ulang dan diproses dua kali — AI terpanggil ganda dan biaya
+            // ikut berlipat.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 300),
             'after_commit' => false,
         ],
 

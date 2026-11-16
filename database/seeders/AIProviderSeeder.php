@@ -19,47 +19,58 @@ class AIProviderSeeder extends Seeder
     {
         $providers = [
             [
-                'name' => 'Gemini 1.5 Flash',
+                'name' => 'LimitRouter',
+                'slug' => 'limitrouter',
+                'model_id' => 'deepseek-v4.1-flash',
+                'base_url' => 'https://limitrouter.com/v1',
+                'api_key_env' => 'LIMITROUTER_API_KEY',
+                'priority' => 1, // Default utama
+                'is_enabled' => true,
+                'max_tokens' => 2048,
+                'timeout_seconds' => 60,
+            ],
+            [
+                'name' => 'Gemini',
                 'slug' => 'gemini',
-                'model_id' => 'gemini-1.5-flash',
+                'model_id' => 'gemini-3.5-flash',
                 'base_url' => 'https://generativelanguage.googleapis.com',
                 'api_key_env' => 'GEMINI_API_KEY',
-                'priority' => 1,
+                'priority' => 2,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
-                'timeout_seconds' => 30,
+                'max_tokens' => 2048,
+                'timeout_seconds' => 60,
             ],
             [
                 'name' => 'Kimi',
                 'slug' => 'kimi',
-                'model_id' => 'kimi-for-coding',
-                'base_url' => 'https://api.kimi.com/coding/v1',
+                'model_id' => 'moonshot-v1-8k',
+                'base_url' => 'https://api.moonshot.cn/v1',
                 'api_key_env' => 'KIMI_API_KEY',
-                'priority' => 2,
+                'priority' => 3,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 30,
             ],
             [
-                'name' => 'GLM-4 Flash',
+                'name' => 'GLM',
                 'slug' => 'glm',
-                'model_id' => 'glm-4-flash',
-                'base_url' => 'https://open.bigmodel.cn/api/paas/v4',
+                'model_id' => 'GLM-4.5-air',
+                'base_url' => 'https://api.z.ai/api/coding/paas/v4',
                 'api_key_env' => 'GLM_API_KEY',
-                'priority' => 3,
+                'priority' => 4,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 30,
             ],
             [
                 'name' => 'NVIDIA NIM',
                 'slug' => 'nvidia',
-                'model_id' => 'meta/llama-3.1-8b-instruct',
+                'model_id' => 'nvidia/nemotron-3.5-lightning-30b-a3b',
                 'base_url' => 'https://integrate.api.nvidia.com/v1',
                 'api_key_env' => 'NVIDIA_API_KEY',
-                'priority' => 4,
+                'priority' => 5,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 30,
             ],
             [
@@ -68,9 +79,9 @@ class AIProviderSeeder extends Seeder
                 'model_id' => 'MiniMax-M2.5',
                 'base_url' => 'https://api.minimax.io/v1',
                 'api_key_env' => 'MINIMAX_API_KEY',
-                'priority' => 5,
+                'priority' => 6,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 30,
             ],
             [
@@ -79,9 +90,9 @@ class AIProviderSeeder extends Seeder
                 'model_id' => 'claude-sonnet-4-20250514',
                 'base_url' => 'https://api.anthropic.com',
                 'api_key_env' => 'CLAUDE_API_KEY',
-                'priority' => 6,
+                'priority' => 7,
                 'is_enabled' => false, // Disabled by default (paid)
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 30,
             ],
             [
@@ -90,9 +101,9 @@ class AIProviderSeeder extends Seeder
                 'model_id' => 'openai/gpt-5.5',
                 'base_url' => 'https://openrouter.ai/api/v1',
                 'api_key_env' => 'OPENROUTER_API_KEY',
-                'priority' => 7,
+                'priority' => 8,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 60, // OpenRouter routing may add latency
             ],
             [
@@ -101,17 +112,19 @@ class AIProviderSeeder extends Seeder
                 'model_id' => 'deepseek/deepseek-v4-pro',
                 'base_url' => 'https://api.tokenrouter.com/v1',
                 'api_key_env' => 'TOKENROUTER_API_KEY',
-                'priority' => 1, // Top priority — $200 Pro credit
+                'priority' => 9,
                 'is_enabled' => true,
-                'max_tokens' => 1024,
+                'max_tokens' => 2048,
                 'timeout_seconds' => 60,
             ],
         ];
 
         foreach ($providers as $provider) {
+            // Cocokkan lewat slug agar baris lama ikut diperbarui
+            // (bukan menambah baris duplikat dengan nama berbeda).
             AIProvider::updateOrCreate(
                 [
-                    'name' => $provider['name'],
+                    'slug' => $provider['slug'],
                 ],
                 $provider
             );
