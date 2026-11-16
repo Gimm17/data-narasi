@@ -1,0 +1,28 @@
+; Ditulis untuk DataNarasi — batas unggah.
+;
+; Tempel berkas ini sebagai .user.ini di document root aplikasi
+; (/home/USER/<domain>/.user.ini). Format .user.ini di-cache 300 detik oleh
+; PHP (user_ini.cache_ttl), jadi tunggu sebentar sebelum perubahan berlaku.
+;
+; KENAPA PERLU: pada akun pinnhost, default sistemnya hanya
+; upload_max_filesize=2M, sementara aplikasi menerima MAX_UPLOAD_SIZE_MB=10.
+; Tanpa berkas ini, unggahan 3-10 MB ditolak PHP sebelum validasi aplikasi
+; sempat berjalan — pengguna hanya melihat halaman kosong tanpa pesan.
+;
+; Urutan yang benar:
+;     MAX_UPLOAD_SIZE_MB (.env)  <  upload_max_filesize  <  post_max_size
+;              10 MB                    12 MB                14 MB
+;
+; Baris error_log/log_errors disalin dari berkas .user.ini yang dibuat cPanel.
+; JANGAN dihapus: tanpa itu error PHP tidak masuk ke ~/logs/php.error.log.
+; Bila cPanel membuat ulang .user.ini dan menimpa berkas ini, salin ulang
+; baris error_log dari .user.ini.cpanel-backup lalu tambahkan batas di atas.
+
+error_log = "/home/USER/logs/php.error.log"
+log_errors = On
+
+upload_max_filesize = 12M
+post_max_size = 14M
+memory_limit = 512M
+max_execution_time = 300
+max_input_time = 300

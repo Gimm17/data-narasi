@@ -1,2 +1,2 @@
 web: php artisan serve --host 0.0.0.0 --port $PORT
-worker: php artisan queue:work redis --sleep=3 --tries=1
+worker: php artisan queue:work database --sleep=3 --tries=1 --timeout=230 --memory=384
