@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\ReportCallbackController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -8,17 +7,8 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Routes untuk callback dari Python service dan integrasi eksternal
-| Tidak memerlukan authentication (divalidasi via callback secret)
+| Seluruh pipeline (cleansing, analisis, chart, narasi AI) kini berjalan
+| di dalam proses PHP, sehingga endpoint callback dari Python service sudah
+| tidak dipakai lagi.
 |
 */
-
-/*
-|--------------------------------------------------------------------------
-| Python Service Callback Routes
-|--------------------------------------------------------------------------
-*/
-
-// Callback endpoint untuk Python service saat selesai memproses data
-Route::post('/v1/reports/{report}/callback', ReportCallbackController::class)
-    ->name('api.reports.callback');
