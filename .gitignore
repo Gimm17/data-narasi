@@ -45,3 +45,11 @@ deploy/panduan-*.txt
 
 # Panduan akses SSH memuat IP, port, dan username cPanel. Repo ini publik.
 deploy/PANDUAN_AKSES_CPANEL_SSH.md
+
+# Security: ignore environment, cPanel, and secret files
+!.env.*.example
+cpanel.txt
+*cpanel*.txt
+*CPANEL*.txt
+*secret*.txt
+pwsupersecretcpanel.txt
